@@ -1,0 +1,7 @@
+/target
+/bin
+/.settings
+/.classpath
+/.project
+leader-election.log
+dependency-reduced-pom.xml
