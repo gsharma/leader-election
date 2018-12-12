@@ -3,6 +3,15 @@
 # Leader Election
 
 ## Bully Algorithm
+### Assumptions
+1. The system is synchronous.
+2. Processes may fail at any time, including during execution of the algorithm.
+3. There is a failure detector which detects failed processes.
+4. A process fails by stopping and returns from failure by restarting.
+5. Message delivery between processes is reliable.
+6. Each process knows its own process id and address, and that of every other process.
+
+### Algorithm
 The algorithm uses the following message types:
 1. Election Message: Sent to announce election
 2. Answer (Alive) Message: Responds to the Election message
@@ -15,12 +24,16 @@ When a process P recovers from failure, or the failure detector indicates that t
 4. If P receives an Election message from another process with a lower ID it sends an Answer message back and starts the election process at the beginning, by sending an Election message to higher-numbered processes.
 5. If P receives a Coordinator message, it treats the sender as the coordinator.
 
-### Assumptions
-1. The system is synchronous.
-2. Processes may fail at any time, including during execution of the algorithm.
-3. There is a failure detector which detects failed processes.
-4. A process fails by stopping and returns from failure by restarting.
-5. Message delivery between processes is reliable.
-6. Each process knows its own process id and address, and that of every other process.
+### Implementation Notes
+1. Let process ID be a Type 4 UUID. Note that UUIDs will need to be comparable.
+2. As an invariant, the process ID does not change during the lifetime of a process.
+3. The lifetime of a process will be denoted by an epoch stamped on all the members in a cluster.
+4. From leader election to leader death, the cluster's epoch does not change. A new round bumps the cluster's epoch.
+5. For improved reliability (a stretch goal), metadata of cluster members, leadership, epochs are/can be saved in persistent storage.
+6. Satisfying assumption #1: TCP is used as the transport.
+7. Satisfying assumption #2,6: addition/removal of cluster members will be broadcasted to all processes participating in leader election.
+8. Satisfying assumption #3: a heartbeat-based failure detector is provided.
+9. Satisfying assumption #4: processes obey fail-stop maxim.
+10. Satisfying assumption #5: Blocking I/O is used in conjunction with TCP as the transport.
 
-
+<this is a work in progress>
