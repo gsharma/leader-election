@@ -5,6 +5,8 @@ package com.github.leaderelection.bully;
  * 
  * @author gaurav
  */
-public class FailureDetector {
+public interface FailureDetector {
+
+    Assessment assess();
 
 }
