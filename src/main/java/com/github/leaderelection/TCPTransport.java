@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,20 +42,22 @@ public final class TCPTransport {
     serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     serverChannel.bind(new InetSocketAddress(host, port));
     liveChannels.putIfAbsent(key(host, port), serverChannel);
-    final ServerListener serverListener = new ServerListener(serverChannel);
+
+    logger.info("Server ready to accept requests on {}", serverChannel.getLocalAddress());
+    final Selector selector = Selector.open();
+    serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+    final ServerListener serverListener = new ServerListener(serverChannel, selector);
     serverListener.start();
     activeListeners.putIfAbsent(key(host, port), serverListener);
+
     return serverChannel;
   }
 
   /**
    * TODO: register a listener
    */
-  private void accept(final ServerSocketChannel serverChannel) throws IOException {
-    // TODO: cleanup the dupe receptions
-    logger.info("Server ready to accept requests on {}", serverChannel.getLocalAddress());
-    final Selector selector = Selector.open();
-    serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+  private void service(final Selector selector) throws IOException {
     final ByteBuffer buffer = ByteBuffer.allocate(256);
     while (true) {
       final int keys = selector.select();
@@ -65,14 +65,22 @@ public final class TCPTransport {
       final Iterator<SelectionKey> iterator = selectedKeys.iterator();
       while (iterator.hasNext()) {
         final SelectionKey key = iterator.next();
-        if (key.isAcceptable()) {
-          final SocketChannel clientChannel = serverChannel.accept();
+        iterator.remove();
+        // accept
+        if (key.isValid() && key.isAcceptable()) {
+          final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
           clientChannel.configureBlocking(false);
           clientChannel.register(selector, SelectionKey.OP_READ);
         }
-        if (key.isReadable()) {
+        // read
+        if (key.isValid() && key.isReadable()) {
           final SocketChannel clientChannel = (SocketChannel) key.channel();
-          clientChannel.read(buffer);
+          final int bytesRead = clientChannel.read(buffer);
+          if (bytesRead == -1) {
+            clientChannel.close();
+            key.cancel();
+            logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+          }
           buffer.flip();
           logger.info("Server received from client {} payload:{}", clientChannel.getRemoteAddress(),
               new String(buffer.array()).trim());
@@ -80,13 +88,12 @@ public final class TCPTransport {
           clientChannel.write(buffer);
           buffer.clear();
         }
-        iterator.remove();
       }
     }
   }
 
   // TODO: finish me
-  public void send(final String host, final int port, final String payload) throws IOException {
+  public String send(final String host, final int port, final String payload) throws IOException {
     logger.info("Client sending to server {}:{} payload:{}", host, port, payload);
     final SocketChannel clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
     // clientChannel.configureBlocking(false);
@@ -95,9 +102,10 @@ public final class TCPTransport {
     buffer.clear();
     clientChannel.read(buffer);
     final String serverResponse = new String(buffer.array()).trim();
-    logger.info("Client received from server {}:{} response:{}", host, port, serverResponse);
     buffer.clear();
     clientChannel.close();
+    logger.info("Client received from server {}:{} response:{}", host, port, serverResponse);
+    return serverResponse;
   }
 
   /**
@@ -137,10 +145,12 @@ public final class TCPTransport {
 
   private final class ServerListener extends Thread {
     private final ServerSocketChannel serverChannel;
+    private final Selector selector;
 
-    private ServerListener(final ServerSocketChannel serverChannel) {
+    private ServerListener(final ServerSocketChannel serverChannel, final Selector selector) {
       setDaemon(true);
       this.serverChannel = serverChannel;
+      this.selector = selector;
       try {
         final InetSocketAddress address = (InetSocketAddress) serverChannel.getLocalAddress();
         setName("acceptor-" + address.getPort());
@@ -153,8 +163,8 @@ public final class TCPTransport {
       try {
         logger.info("Started acceptor on {}", serverChannel.getLocalAddress());
         while (!interrupted()) {
-          accept(serverChannel);
-          LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
+          service(selector);
+          // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
         }
         logger.info("Closing acceptor on {}", serverChannel.getLocalAddress());
       } catch (IOException problem) {

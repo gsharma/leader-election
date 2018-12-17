@@ -28,7 +28,7 @@ public final class TCPTransportTest {
     assertTrue(serverChannelOne.isOpen());
     // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
     final String payloadOne = "one";
-    transport.send(host, portOne, payloadOne);
+    assertNotNull(transport.send(host, portOne, payloadOne));
     transport.closeServer(host, portOne);
     assertFalse(serverChannelOne.isOpen());
 
@@ -45,8 +45,10 @@ public final class TCPTransportTest {
     assertTrue(serverChannelThree.isOpen());
 
     // push payloads to both servers
-    transport.send(host, portTwo, "two");
-    transport.send(host, portThree, "three");
+    for (int iter = 0; iter < 1; iter++) {
+      assertNotNull(transport.send(host, portTwo, "two"));
+      assertNotNull(transport.send(host, portThree, "three"));
+    }
 
     // close both servers
     transport.closeServer(host, portTwo);
