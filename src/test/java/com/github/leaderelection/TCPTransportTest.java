@@ -45,7 +45,7 @@ public final class TCPTransportTest {
     assertTrue(serverChannelThree.isOpen());
 
     // push payloads to both servers
-    for (int iter = 0; iter < 1; iter++) {
+    for (int iter = 0; iter < 2; iter++) {
       assertNotNull(transport.send(host, portTwo, "two"));
       assertNotNull(transport.send(host, portThree, "three"));
     }

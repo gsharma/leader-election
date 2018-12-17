@@ -96,7 +96,7 @@ public final class TCPTransport {
   public String send(final String host, final int port, final String payload) throws IOException {
     logger.info("Client sending to server {}:{} payload:{}", host, port, payload);
     final SocketChannel clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
-    // clientChannel.configureBlocking(false);
+    clientChannel.configureBlocking(false);
     final ByteBuffer buffer = ByteBuffer.wrap(payload.getBytes());
     clientChannel.write(buffer);
     buffer.clear();
@@ -148,7 +148,7 @@ public final class TCPTransport {
     private final Selector selector;
 
     private ServerListener(final ServerSocketChannel serverChannel, final Selector selector) {
-      setDaemon(true);
+      // setDaemon(true);
       this.serverChannel = serverChannel;
       this.selector = selector;
       try {
