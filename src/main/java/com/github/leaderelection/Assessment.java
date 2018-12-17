@@ -1,4 +1,4 @@
-package com.github.leaderelection.bully;
+package com.github.leaderelection;
 
 public final class Assessment {
 

@@ -1,4 +1,4 @@
-package com.github.leaderelection.bully;
+package com.github.leaderelection;
 
 /**
  * A heartbeat-based failure detector implementation.
@@ -7,10 +7,10 @@ package com.github.leaderelection.bully;
  */
 public final class HeartbeatFailureDetector implements FailureDetector {
 
-    @Override
-    public Assessment assess() {
-        // TODO
-        return null;
-    }
+  @Override
+  public Assessment assess() {
+    // TODO
+    return null;
+  }
 
 }

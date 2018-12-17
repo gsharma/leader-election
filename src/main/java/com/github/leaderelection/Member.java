@@ -1,4 +1,4 @@
-package com.github.leaderelection.bully;
+package com.github.leaderelection;
 
 /**
  * Skeleton for a member server participating in leader election as part of a group of servers.

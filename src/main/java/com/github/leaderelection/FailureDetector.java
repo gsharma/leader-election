@@ -1,4 +1,4 @@
-package com.github.leaderelection.bully;
+package com.github.leaderelection;
 
 /**
  * Skeleton for a failure detector.
@@ -7,6 +7,6 @@ package com.github.leaderelection.bully;
  */
 public interface FailureDetector {
 
-    Assessment assess();
+  Assessment assess();
 
 }

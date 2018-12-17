@@ -3,5 +3,5 @@
 /.settings
 /.classpath
 /.project
-leader-election.log
+leader.log
 dependency-reduced-pom.xml
