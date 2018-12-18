@@ -5,6 +5,7 @@ package com.github.leaderelection;
  * 
  * @author gaurav
  */
-public class Member {
+public final class Member {
+  private Id id;
 
 }
