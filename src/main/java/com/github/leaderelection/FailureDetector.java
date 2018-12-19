@@ -7,6 +7,14 @@ package com.github.leaderelection;
  */
 public interface FailureDetector {
 
+  boolean init();
+
+  boolean tini();
+
+  boolean addMember(Member member);
+
+  boolean removeMember(Member member);
+
   Assessment assess();
 
 }
