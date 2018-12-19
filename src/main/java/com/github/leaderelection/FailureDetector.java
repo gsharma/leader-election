@@ -11,10 +11,8 @@ public interface FailureDetector {
 
   boolean tini();
 
-  boolean addMember(Member member);
-
-  boolean removeMember(Member member);
-
   Assessment assess();
+  
+  MemberGroup members();
 
 }

@@ -9,9 +9,11 @@ import java.io.IOException;
  */
 public final class HeartbeatFailureDetector implements FailureDetector {
   private final TCPTransport transport;
+  private final MemberGroup memberGroup;
 
-  public HeartbeatFailureDetector(final TCPTransport transport) {
+  public HeartbeatFailureDetector(final TCPTransport transport, final MemberGroup memberGroup) {
     this.transport = transport;
+    this.memberGroup = memberGroup;
   }
 
   @Override
@@ -27,6 +29,11 @@ public final class HeartbeatFailureDetector implements FailureDetector {
   }
 
   @Override
+  public MemberGroup members() {
+    return memberGroup;
+  }
+
+  @Override
   public boolean tini() {
     // TODO
     try {
@@ -34,18 +41,6 @@ public final class HeartbeatFailureDetector implements FailureDetector {
     } catch (IOException problem) {
       // TODO
     }
-    return false;
-  }
-
-  @Override
-  public boolean addMember(Member member) {
-    // TODO
-    return false;
-  }
-
-  @Override
-  public boolean removeMember(Member member) {
-    // TODO
     return false;
   }
 
