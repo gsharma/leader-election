@@ -6,14 +6,26 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public final class Member {
+  // immutables
   private final Id id;
   private final String host;
   private final int port;
+
+  // mutables
+  private Status status;
 
   public Member(final Id id, final String host, final int port) {
     this.id = id;
     this.host = host;
     this.port = port;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(final Status status) {
+    this.status = status;
   }
 
   public Id getId() {
@@ -35,6 +47,7 @@ public final class Member {
     result = prime * result + ((host == null) ? 0 : host.hashCode());
     result = prime * result + ((id == null) ? 0 : id.hashCode());
     result = prime * result + port;
+    result = prime * result + ((status == null) ? 0 : status.hashCode());
     return result;
   }
 
@@ -67,6 +80,9 @@ public final class Member {
     if (port != other.port) {
       return false;
     }
+    if (status != other.status) {
+      return false;
+    }
     return true;
   }
 
@@ -74,7 +90,7 @@ public final class Member {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("Member [id=").append(id).append(", host=").append(host).append(", port=")
-        .append(port).append("]");
+        .append(port).append(", status=").append(status).append("]");
     return builder.toString();
   }
 
