@@ -10,6 +10,7 @@ import java.util.List;
  */
 public final class MemberGroup {
   private final List<Member> members = new ArrayList<>();
+  private final GroupEpoch epoch = new GroupEpoch();
   private final Id id;
 
   public MemberGroup(final Id id, final List<Member> members) {
