@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -25,107 +26,105 @@ import org.apache.logging.log4j.Logger;
 public final class TCPTransport {
   private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
 
-  private final ConcurrentMap<String, ServerSocketChannel> liveChannels = new ConcurrentHashMap<>();
-  private final ConcurrentMap<String, Thread> activeListeners = new ConcurrentHashMap<>();
+  private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
+
+  private static final class ServerMetadata {
+    private final UUID id = UUID.randomUUID();
+    private final String host;
+    private final int port;
+    private final ServerSocketChannel serverChannel;
+    private final ServerListener serverListener;
+
+    private ServerMetadata(final String host, final int port,
+        final ServerSocketChannel serverChannel, final ServerListener serverListener) {
+      this.host = host;
+      this.port = port;
+      this.serverChannel = serverChannel;
+      this.serverListener = serverListener;
+    }
+  }
 
   /**
    * Bind and create a server socket listening on the given host,port.
    */
-  public ServerSocketChannel bind(final String host, final int port) throws IOException {
+  public UUID bindServer(final String host, final int port, final ResponseHandler responseHandler)
+      throws IOException {
     logger.info("Preparing server to listen on {}:{}", host, port);
-    ServerSocketChannel serverChannel = liveChannels.get(key(host, port));
-    if (serverChannel != null && serverChannel.isOpen()) {
-      return serverChannel;
+    for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
+      final ServerMetadata activeServer = serverEntry.getValue();
+      if (activeServer.host.equals(host) && activeServer.port == port) {
+        if (activeServer.serverChannel != null && activeServer.serverChannel.isOpen()) {
+          return activeServer.id;
+        } else {
+          // stop and clear
+          stopServer(activeServer.id);
+          break;
+        }
+      }
     }
-    serverChannel = ServerSocketChannel.open();
+    final ServerSocketChannel serverChannel = ServerSocketChannel.open();
     serverChannel.configureBlocking(false);
     serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
     serverChannel.bind(new InetSocketAddress(host, port));
-    liveChannels.putIfAbsent(key(host, port), serverChannel);
 
     logger.info("Server ready to accept requests on {}", serverChannel.getLocalAddress());
     final Selector selector = Selector.open();
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-    final ServerListener serverListener = new ServerListener(serverChannel, selector);
+    final ServerListener serverListener =
+        new ServerListener(serverChannel, selector, responseHandler);
     serverListener.start();
-    activeListeners.putIfAbsent(key(host, port), serverListener);
 
-    return serverChannel;
-  }
+    final ServerMetadata server = new ServerMetadata(host, port, serverChannel, serverListener);
+    final UUID serverId = server.id;
+    activeServers.put(serverId, server);
 
-  /**
-   * TODO: register a listener
-   */
-  private void service(final Selector selector) throws IOException {
-    final ByteBuffer buffer = ByteBuffer.allocate(256);
-    while (true) {
-      final int keys = selector.select();
-      final Set<SelectionKey> selectedKeys = selector.selectedKeys();
-      final Iterator<SelectionKey> iterator = selectedKeys.iterator();
-      while (iterator.hasNext()) {
-        final SelectionKey key = iterator.next();
-        iterator.remove();
-        // accept
-        if (key.isValid() && key.isAcceptable()) {
-          final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
-          clientChannel.configureBlocking(false);
-          clientChannel.register(selector, SelectionKey.OP_READ);
-        }
-        // read
-        if (key.isValid() && key.isReadable()) {
-          final SocketChannel clientChannel = (SocketChannel) key.channel();
-          final int bytesRead = clientChannel.read(buffer);
-          if (bytesRead == -1) {
-            clientChannel.close();
-            key.cancel();
-            logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
-          }
-          buffer.flip();
-          logger.info("Server received from client {} payload:{}", clientChannel.getRemoteAddress(),
-              new String(buffer.array()).trim());
-          // tmp: echoing back to client
-          clientChannel.write(buffer);
-          buffer.clear();
-        }
-      }
-    }
+    return serverId;
   }
 
   // TODO: finish me
-  public String send(final String host, final int port, final String payload) throws IOException {
-    logger.info("Client sending to server {}:{} payload:{}", host, port, payload);
-    final SocketChannel clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
+  public byte[] send(final UUID serverId, final byte[] payload) throws IOException {
+    final ServerMetadata server = activeServers.get(serverId);
+    if (server == null) {
+      throw new UnsupportedOperationException(
+          String.format("No server found for serverId:%s", serverId.toString()));
+    }
+    logger.info("Client sending to server {}:{} payload:{}", server.host, server.port, payload);
+    final SocketChannel clientChannel =
+        SocketChannel.open(new InetSocketAddress(server.host, server.port));
     clientChannel.configureBlocking(false);
-    final ByteBuffer buffer = ByteBuffer.wrap(payload.getBytes());
+    final ByteBuffer buffer = ByteBuffer.wrap(payload);
     clientChannel.write(buffer);
     buffer.clear();
     clientChannel.read(buffer);
-    final String serverResponse = new String(buffer.array()).trim();
+    final byte[] serverResponse = buffer.array();
     buffer.clear();
     clientChannel.close();
-    logger.info("Client received from server {}:{} response:{}", host, port, serverResponse);
+    logger.info("Client received from server {}:{} response:{}", server.host, server.port,
+        serverResponse);
     return serverResponse;
   }
 
   /**
-   * Close the server socket listening on the given host and port.
+   * Close the server socket for the given serverId.
    */
-  public void closeServer(final String host, final int port) throws IOException {
-    final String key = key(host, port);
-    ServerSocketChannel serverChannel = liveChannels.get(key);
+  public void stopServer(final UUID serverId) throws IOException {
+    final ServerMetadata server = activeServers.get(serverId);
+    if (server == null) {
+      throw new UnsupportedOperationException(
+          String.format("No server found for serverId:%s", serverId.toString()));
+    }
+    ServerSocketChannel serverChannel = server.serverChannel;
     close(serverChannel);
-    liveChannels.remove(key(host, port));
-    final Thread listenerThread = activeListeners.get(key);
+    final Thread listenerThread = server.serverListener;
     listenerThread.interrupt();
-    activeListeners.remove(key);
+    activeServers.remove(serverId);
   }
 
-  public void tini() throws IOException {
-    for (final Map.Entry<String, ServerSocketChannel> liveChannelEntry : liveChannels.entrySet()) {
-      final String address = liveChannelEntry.getKey();
-      final ServerSocketChannel serverChannel = liveChannelEntry.getValue();
-      close(serverChannel);
+  public void shutdown() throws IOException {
+    for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
+      final UUID serverId = serverEntry.getKey();
+      stopServer(serverId);
     }
   }
 
@@ -139,22 +138,65 @@ public final class TCPTransport {
     }
   }
 
-  private static String key(final String host, final int port) {
-    return host + ':' + port;
-  }
-
-  private final class ServerListener extends Thread {
+  private final static class ServerListener extends Thread {
     private final ServerSocketChannel serverChannel;
     private final Selector selector;
+    private final ResponseHandler responseHandler;
 
-    private ServerListener(final ServerSocketChannel serverChannel, final Selector selector) {
+    private ServerListener(final ServerSocketChannel serverChannel, final Selector selector,
+        final ResponseHandler responseHandler) {
       // setDaemon(true);
       this.serverChannel = serverChannel;
       this.selector = selector;
+      this.responseHandler = responseHandler;
       try {
         final InetSocketAddress address = (InetSocketAddress) serverChannel.getLocalAddress();
         setName("acceptor-" + address.getPort());
       } catch (IOException problem) {
+      }
+    }
+
+    /**
+     * TODO: register a listener
+     */
+    private void service(final Selector selector) throws IOException {
+      final ByteBuffer buffer = ByteBuffer.allocate(256);
+      while (true) {
+        final int keys = selector.select();
+        final Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        final Iterator<SelectionKey> iterator = selectedKeys.iterator();
+        while (iterator.hasNext()) {
+          final SelectionKey key = iterator.next();
+          iterator.remove();
+
+          // accept
+          if (key.isValid() && key.isAcceptable()) {
+            final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
+            clientChannel.configureBlocking(false);
+            clientChannel.register(selector, SelectionKey.OP_READ);
+          }
+
+          // read
+          if (key.isValid() && key.isReadable()) {
+            final SocketChannel clientChannel = (SocketChannel) key.channel();
+            final int bytesRead = clientChannel.read(buffer);
+            if (bytesRead == -1) {
+              clientChannel.close();
+              key.cancel();
+              logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+            }
+            buffer.flip();
+            final byte[] responseBytes = buffer.array();
+            // TODO
+            logger.info("Server received from client {} payload:{}",
+                clientChannel.getRemoteAddress(), new String(responseBytes).trim());
+            responseHandler.handleResponse(responseBytes);
+
+            // tmp: echoing back to client
+            clientChannel.write(buffer);
+            buffer.clear();
+          }
+        }
       }
     }
 

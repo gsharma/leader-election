@@ -37,7 +37,7 @@ public final class HeartbeatFailureDetector implements FailureDetector {
   public boolean tini() {
     // TODO
     try {
-      transport.tini();
+      transport.shutdown();
     } catch (IOException problem) {
       // TODO
     }

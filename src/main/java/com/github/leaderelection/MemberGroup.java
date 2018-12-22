@@ -20,6 +20,10 @@ public final class MemberGroup {
     }
   }
 
+  public GroupEpoch currentEpoch() {
+    return epoch;
+  }
+
   public boolean removeMember(final Member member) {
     return members.remove(member);
   }
