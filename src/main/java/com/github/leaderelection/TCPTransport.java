@@ -26,8 +26,13 @@ import org.apache.logging.log4j.Logger;
 public final class TCPTransport {
   private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
 
+  private static final int smallMessageSize = 4 * 1024; // 4k
+  private static final int mediumMessageSize = 128 * 1024; // 128k
+  private static final int largeMessageSize = 1024 * 1024; // 1m
+
   private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
 
+  // TODO: make part of the metadata query-able by server id
   private static final class ServerMetadata {
     private final UUID id = UUID.randomUUID();
     private final String host;
@@ -93,16 +98,64 @@ public final class TCPTransport {
     final SocketChannel clientChannel =
         SocketChannel.open(new InetSocketAddress(server.host, server.port));
     clientChannel.configureBlocking(false);
-    final ByteBuffer buffer = ByteBuffer.wrap(payload);
-    clientChannel.write(buffer);
+
+    /*
+     * final int bytesWritten = write(clientChannel, payload); if (bytesWritten != payload.length) {
+     * logger.error("Failed to completely write the payload, intended:{}, actual:{}",
+     * payload.length, bytesWritten); }
+     * 
+     * final byte[] serverResponse = read(clientChannel);
+     */
+
+    // final ByteBuffer buffer = ByteBuffer.allocateDirect(payload.length);
+    // buffer.put(payload);
+    ByteBuffer buffer = ByteBuffer.wrap(payload);
+    final int bytesWritten = clientChannel.write(buffer);
+    if (bytesWritten != payload.length) {
+      logger.error("Failed to completely write the payload, intended:{}, actual:{}", payload.length,
+          bytesWritten);
+    }
     buffer.clear();
-    clientChannel.read(buffer);
+
+    // TODO: should be able to read more than the input buffer size
+    int bytesRead = clientChannel.read(buffer);
     final byte[] serverResponse = buffer.array();
     buffer.clear();
+
     clientChannel.close();
-    logger.info("Client received from server {}:{} response:{}", server.host, server.port,
-        serverResponse);
+    logger.info("Client received response from server {}:{} bytes:{}", server.host, server.port,
+        serverResponse.length);
     return serverResponse;
+  }
+
+  private static byte[] read(final SocketChannel clientChannel) throws IOException {
+    final ByteBuffer buffer = ByteBuffer.allocate(smallMessageSize);
+    int bytesRead = clientChannel.read(buffer);
+    int totalBytesRead = bytesRead;
+    while (bytesRead > 0) {
+      bytesRead = clientChannel.read(buffer);
+      totalBytesRead += bytesRead;
+    }
+    if (bytesRead == -1) {
+      // end of stream
+    }
+    logger.info("Client received response from server {} bytes:{}", clientChannel.getRemoteAddress(),
+        totalBytesRead);
+    return buffer.array();
+  }
+
+  private static int write(final SocketChannel clientChannel, final byte[] payload)
+      throws IOException {
+    final ByteBuffer buffer = ByteBuffer.wrap(payload);
+    int bytesWritten = clientChannel.write(buffer);
+    int totalBytesWritten = bytesWritten;
+    while (bytesWritten > 0 && buffer.hasRemaining()) {
+      bytesWritten = clientChannel.write(buffer);
+      totalBytesWritten += bytesWritten;
+    }
+    logger.info("Server sending to client {} response:{}, payload:{} bytes, written:{} bytes",
+        clientChannel.getRemoteAddress(), new String(payload), payload.length, totalBytesWritten);
+    return totalBytesWritten;
   }
 
   /**
@@ -185,15 +238,21 @@ public final class TCPTransport {
               key.cancel();
               logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
             }
+
             buffer.flip();
-            final byte[] responseBytes = buffer.array();
+            final byte[] payload = buffer.array();
             // TODO
             logger.info("Server received from client {} payload:{}",
-                clientChannel.getRemoteAddress(), new String(responseBytes).trim());
-            responseHandler.handleResponse(responseBytes);
+                clientChannel.getRemoteAddress(), new String(payload).trim());
+            responseHandler.handleResponse(payload);
 
-            // tmp: echoing back to client
-            clientChannel.write(buffer);
+            // tmp: echoing back to client with tstamp
+            final byte[] responseBytes = (new String(payload) + System.currentTimeMillis()).getBytes();
+            logger.info("Server sending to client {} response:{} bytes:{}",
+                clientChannel.getRemoteAddress(), new String(responseBytes), responseBytes.length);
+            // if (key.isWritable()) {
+            write(clientChannel, responseBytes);
+            // }
             buffer.clear();
           }
         }

@@ -33,7 +33,10 @@ public final class TCPTransportTest {
     // assertTrue(serverChannelOne.isOpen());
     // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
     final String payloadOne = "one";
-    assertNotNull(transport.send(serverOne, payloadOne.getBytes()));
+    byte[] response = transport.send(serverOne, payloadOne.getBytes());
+    assertNotNull(response);
+    logger.info("Client received from server {}:{} response:{}, {} bytes", host, portOne,
+        new String(response), response.length);
     transport.stopServer(serverOne);
     // assertFalse(serverChannelOne.isOpen());
 
@@ -51,8 +54,15 @@ public final class TCPTransportTest {
 
     // push payloads to both servers
     for (int iter = 0; iter < 2; iter++) {
-      assertNotNull(transport.send(serverTwo, "two".getBytes()));
-      assertNotNull(transport.send(serverThree, "three".getBytes()));
+      response = transport.send(serverTwo, "two".getBytes());
+      assertNotNull(response);
+      logger.info("Client received from server {}:{} response:{}, {} bytes", host, portTwo,
+          new String(response), response.length);
+
+      response = transport.send(serverThree, "three".getBytes());
+      assertNotNull(response);
+      logger.info("Client received from server {}:{} response:{}, {} bytes", host, portThree,
+          new String(response), response.length);
     }
 
     // close both servers
