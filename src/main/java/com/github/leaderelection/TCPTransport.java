@@ -2,6 +2,7 @@ package com.github.leaderelection;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -98,6 +99,8 @@ public final class TCPTransport {
     final SocketChannel clientChannel =
         SocketChannel.open(new InetSocketAddress(server.host, server.port));
     clientChannel.configureBlocking(false);
+    final Socket socket = clientChannel.socket();
+    socket.setTcpNoDelay(true);
 
     /*
      * final int bytesWritten = write(clientChannel, payload); if (bytesWritten != payload.length) {
@@ -215,7 +218,10 @@ public final class TCPTransport {
     private void service(final Selector selector) throws IOException {
       final ByteBuffer buffer = ByteBuffer.allocate(256);
       while (true) {
-        final int keys = selector.select();
+        final int channelsReady = selector.select();
+        if (channelsReady == 0) {
+          continue;
+        }
         final Set<SelectionKey> selectedKeys = selector.selectedKeys();
         final Iterator<SelectionKey> iterator = selectedKeys.iterator();
         while (iterator.hasNext()) {
@@ -226,12 +232,18 @@ public final class TCPTransport {
           if (key.isValid() && key.isAcceptable()) {
             final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
             clientChannel.configureBlocking(false);
+            final Socket socket = clientChannel.socket();
+            socket.setTcpNoDelay(true);
             clientChannel.register(selector, SelectionKey.OP_READ);
+            // clientChannel.register(selector, SelectionKey.OP_WRITE);
           }
 
           // read
-          if (key.isValid() && key.isReadable()) {
+          else if (key.isValid() && key.isReadable()) {
             final SocketChannel clientChannel = (SocketChannel) key.channel();
+            clientChannel.configureBlocking(false);
+            final Socket socket = clientChannel.socket();
+            socket.setTcpNoDelay(true);
             final int bytesRead = clientChannel.read(buffer);
             if (bytesRead == -1) {
               clientChannel.close();
@@ -254,6 +266,11 @@ public final class TCPTransport {
             write(clientChannel, responseBytes);
             // }
             buffer.clear();
+          }
+          
+          // write
+          else if (key.isValid() && key.isWritable()) {
+            //logger.info("WRITABLE");
           }
         }
       }
