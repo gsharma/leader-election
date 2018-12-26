@@ -20,7 +20,7 @@ public final class TCPTransportTest {
   @Test
   public void testServerLifecycle() throws IOException {
     final String host = "localhost";
-    int portOne = 9000;
+    int portOne = 5000;
     final ResponseHandler responseHandler = new ResponseHandler() {
       @Override
       public void handleResponse(byte[] response) {

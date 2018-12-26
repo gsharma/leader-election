@@ -102,32 +102,17 @@ public final class TCPTransport {
     final Socket socket = clientChannel.socket();
     socket.setTcpNoDelay(true);
 
-    /*
-     * final int bytesWritten = write(clientChannel, payload); if (bytesWritten != payload.length) {
-     * logger.error("Failed to completely write the payload, intended:{}, actual:{}",
-     * payload.length, bytesWritten); }
-     * 
-     * final byte[] serverResponse = read(clientChannel);
-     */
-
-    // final ByteBuffer buffer = ByteBuffer.allocateDirect(payload.length);
-    // buffer.put(payload);
-    ByteBuffer buffer = ByteBuffer.wrap(payload);
-    final int bytesWritten = clientChannel.write(buffer);
+    final int bytesWritten = write(clientChannel, payload);
     if (bytesWritten != payload.length) {
       logger.error("Failed to completely write the payload, intended:{}, actual:{}", payload.length,
           bytesWritten);
     }
-    buffer.clear();
 
-    // TODO: should be able to read more than the input buffer size
-    int bytesRead = clientChannel.read(buffer);
-    final byte[] serverResponse = buffer.array();
-    buffer.clear();
+    final byte[] serverResponse = read(clientChannel);
 
     clientChannel.close();
     logger.info("Client received response from server {}:{} bytes:{}", server.host, server.port,
-        serverResponse.length);
+        new String(serverResponse));
     return serverResponse;
   }
 
@@ -142,8 +127,8 @@ public final class TCPTransport {
     if (bytesRead == -1) {
       // end of stream
     }
-    logger.info("Client received response from server {} bytes:{}", clientChannel.getRemoteAddress(),
-        totalBytesRead);
+    logger.info("Client received response from server {} bytes:{}",
+        clientChannel.getRemoteAddress(), totalBytesRead);
     return buffer.array();
   }
 
@@ -201,7 +186,7 @@ public final class TCPTransport {
 
     private ServerListener(final ServerSocketChannel serverChannel, final Selector selector,
         final ResponseHandler responseHandler) {
-      // setDaemon(true);
+      setDaemon(true);
       this.serverChannel = serverChannel;
       this.selector = selector;
       this.responseHandler = responseHandler;
@@ -253,24 +238,26 @@ public final class TCPTransport {
 
             buffer.flip();
             final byte[] payload = buffer.array();
-            // TODO
             logger.info("Server received from client {} payload:{}",
                 clientChannel.getRemoteAddress(), new String(payload).trim());
+            // TODO
             responseHandler.handleResponse(payload);
 
             // tmp: echoing back to client with tstamp
-            final byte[] responseBytes = (new String(payload) + System.currentTimeMillis()).getBytes();
+            final byte[] responseBytes =
+                Long.toString(System.currentTimeMillis()).getBytes();
             logger.info("Server sending to client {} response:{} bytes:{}",
                 clientChannel.getRemoteAddress(), new String(responseBytes), responseBytes.length);
+
             // if (key.isWritable()) {
             write(clientChannel, responseBytes);
             // }
             buffer.clear();
           }
-          
+
           // write
           else if (key.isValid() && key.isWritable()) {
-            //logger.info("WRITABLE");
+            // logger.info("WRITABLE");
           }
         }
       }
