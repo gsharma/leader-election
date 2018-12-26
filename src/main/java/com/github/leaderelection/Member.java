@@ -5,7 +5,7 @@ package com.github.leaderelection;
  * 
  * @author gaurav
  */
-public final class Member {
+public final class Member implements Comparable<Member> {
   // immutables
   private final Id id;
   private final String host;
@@ -13,11 +13,40 @@ public final class Member {
 
   // mutables
   private Status status;
+  private Epoch epoch = new Epoch();
+  private boolean leader;
 
-  public Member(final Id id, final String host, final int port) {
+  private final MemberGroup memberGroup;
+  private final FailureDetector failureDetector;
+  private final TCPTransport transport;
+
+  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup,
+      final FailureDetector failureDetector, final TCPTransport transport) {
     this.id = id;
     this.host = host;
     this.port = port;
+
+    this.memberGroup = memberGroup;
+    this.failureDetector = failureDetector;
+    this.transport = transport;
+  }
+
+  public void serviceRequest(final ElectionRequest electionRequest) {}
+
+  public void serviceRequest(final HeartbeatRequest heartbeatRequest) {}
+
+  public void serviceRequest(final CoordinatorRequest coordinatorRequest) {}
+
+  public boolean isLeader() {
+    return leader;
+  }
+
+  public void incrementEpoch() {
+    epoch = epoch.increment();
+  }
+
+  public Epoch currentEpoch() {
+    return epoch;
   }
 
   public Status getStatus() {
@@ -92,6 +121,11 @@ public final class Member {
     builder.append("Member [id=").append(id).append(", host=").append(host).append(", port=")
         .append(port).append(", status=").append(status).append("]");
     return builder.toString();
+  }
+
+  @Override
+  public int compareTo(Member other) {
+    return getId().compareTo(other.getId());
   }
 
 }

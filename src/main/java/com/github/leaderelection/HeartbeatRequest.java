@@ -7,5 +7,5 @@ package com.github.leaderelection;
  */
 public final class HeartbeatRequest {
   private Id senderId;
-  private GroupEpoch epoch;
+  private Epoch epoch;
 }

@@ -7,7 +7,7 @@ import java.util.function.Function;
  * 
  * @author gaurav
  */
-public interface Id extends Function<Void, String>, Comparable<String> {
+public interface Id extends Function<Void, String>, Comparable<Id> {
   @Override
   default String apply(Void blah) {
     return id();

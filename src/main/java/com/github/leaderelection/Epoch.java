@@ -5,14 +5,14 @@ package com.github.leaderelection;
  * 
  * @author gaurav
  */
-public final class GroupEpoch implements Comparable<GroupEpoch> {
+public final class Epoch implements Comparable<Epoch> {
   private final long epoch;
 
-  public GroupEpoch() {
+  public Epoch() {
     this(0L);
   }
 
-  private GroupEpoch(final long epoch) {
+  private Epoch(final long epoch) {
     if (epoch < 0) {
       throw new IllegalArgumentException("Only positive epoch values are allowed");
     }
@@ -21,21 +21,21 @@ public final class GroupEpoch implements Comparable<GroupEpoch> {
 
   // due to the fact that ticking generates another immutable epoch by simply reading the
   // epoch, there's no need to lock here
-  public GroupEpoch increment() {
+  public Epoch increment() {
     long nextEpoch = epoch;
     if (nextEpoch == Long.MAX_VALUE) {
       nextEpoch = 0L;
     } else {
       ++nextEpoch;
     }
-    return new GroupEpoch(nextEpoch);
+    return new Epoch(nextEpoch);
   }
 
-  public boolean before(final GroupEpoch other) {
+  public boolean before(final Epoch other) {
     return this.compareTo(other) < 0;
   }
 
-  public boolean after(final GroupEpoch other) {
+  public boolean after(final Epoch other) {
     return this.compareTo(other) > 0;
   }
 
@@ -44,7 +44,7 @@ public final class GroupEpoch implements Comparable<GroupEpoch> {
   }
 
   @Override
-  public int compareTo(final GroupEpoch other) {
+  public int compareTo(final Epoch other) {
     return Long.compare(this.epoch, other.epoch);
   }
 

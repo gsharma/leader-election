@@ -10,7 +10,6 @@ import java.util.List;
  */
 public final class MemberGroup {
   private final List<Member> members = new ArrayList<>();
-  private final GroupEpoch epoch = new GroupEpoch();
   private final Id id;
 
   public MemberGroup(final Id id, final List<Member> members) {
@@ -18,10 +17,6 @@ public final class MemberGroup {
     for (final Member member : members) {
       members.add(member);
     }
-  }
-
-  public GroupEpoch currentEpoch() {
-    return epoch;
   }
 
   public boolean removeMember(final Member member) {
@@ -34,6 +29,26 @@ public final class MemberGroup {
 
   public Id getId() {
     return id;
+  }
+
+  public List<Member> largerMembers(final Member member) {
+    final List<Member> largerMembers = new ArrayList<>();
+    for (final Member otherMember : members) {
+      if (member.compareTo(otherMember) < 0) {
+        largerMembers.add(otherMember);
+      }
+    }
+    return largerMembers;
+  }
+
+  public List<Member> smallerMembers(final Member member) {
+    final List<Member> smallerMembers = new ArrayList<>();
+    for (final Member otherMember : members) {
+      if (member.compareTo(otherMember) > 0) {
+        smallerMembers.add(otherMember);
+      }
+    }
+    return smallerMembers;
   }
 
 }

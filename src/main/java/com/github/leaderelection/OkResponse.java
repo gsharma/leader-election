@@ -8,4 +8,5 @@ package com.github.leaderelection;
  */
 public final class OkResponse {
   private Id senderId;
+  private Epoch epoch;
 }

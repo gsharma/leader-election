@@ -7,5 +7,5 @@ package com.github.leaderelection;
  */
 public final class CoordinatorRequest {
   private Id leaderId;
-  private GroupEpoch epoch;
+  private Epoch epoch;
 }

@@ -7,5 +7,5 @@ package com.github.leaderelection;
  */
 public final class ElectionRequest {
   private Id senderId;
-  private GroupEpoch epoch;
+  private Epoch epoch;
 }

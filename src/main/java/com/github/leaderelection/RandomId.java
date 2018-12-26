@@ -16,8 +16,8 @@ public final class RandomId implements Id {
   }
 
   @Override
-  public int compareTo(String other) {
-    return this.id.compareTo(UUID.fromString(other));
+  public int compareTo(Id other) {
+    return this.id.compareTo(((RandomId) other).id);
   }
 
   @Override
