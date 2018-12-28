@@ -1,6 +1,7 @@
 package com.github.leaderelection;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,8 +28,23 @@ public final class MemberGroup {
     return members.add(member);
   }
 
+  public Member findMember(final Id memberId) {
+    Member member = null;
+    for (final Member candidate : members) {
+      if (candidate.getId().equals(memberId)) {
+        member = candidate;
+        break;
+      }
+    }
+    return member;
+  }
+
   public Id getId() {
     return id;
+  }
+
+  public List<Member> allMembers() {
+    return Collections.unmodifiableList(members);
   }
 
   public List<Member> largerMembers(final Member member) {

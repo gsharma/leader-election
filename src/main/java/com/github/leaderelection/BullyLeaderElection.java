@@ -1,11 +1,17 @@
 package com.github.leaderelection;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * An implementation of the bully leader election algorithm.
  * 
  * @author gaurav
  */
 public final class BullyLeaderElection implements LeaderElection {
+  private static final Logger logger =
+      LogManager.getLogger(BullyLeaderElection.class.getSimpleName());
+
   private final MemberGroup memberGroup;
   private final FailureDetector failureDetector;
   private final TCPTransport transport;

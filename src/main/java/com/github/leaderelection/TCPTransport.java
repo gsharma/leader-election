@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 public final class TCPTransport {
   private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
 
+  private static final int xsmallMessageSize = 512; // 0.5k
   private static final int smallMessageSize = 4 * 1024; // 4k
   private static final int mediumMessageSize = 128 * 1024; // 128k
   private static final int largeMessageSize = 1024 * 1024; // 1m
@@ -108,6 +111,9 @@ public final class TCPTransport {
           bytesWritten);
     }
 
+    // wait a tiny while for the server to respond; hmm but this is just dumb
+    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10L));
+
     final byte[] serverResponse = read(clientChannel);
 
     clientChannel.close();
@@ -117,7 +123,7 @@ public final class TCPTransport {
   }
 
   private static byte[] read(final SocketChannel clientChannel) throws IOException {
-    final ByteBuffer buffer = ByteBuffer.allocate(smallMessageSize);
+    final ByteBuffer buffer = ByteBuffer.allocate(xsmallMessageSize);
     int bytesRead = clientChannel.read(buffer);
     int totalBytesRead = bytesRead;
     while (bytesRead > 0) {
@@ -244,8 +250,7 @@ public final class TCPTransport {
             responseHandler.handleResponse(payload);
 
             // tmp: echoing back to client with tstamp
-            final byte[] responseBytes =
-                Long.toString(System.currentTimeMillis()).getBytes();
+            final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
             logger.info("Server sending to client {} response:{} bytes:{}",
                 clientChannel.getRemoteAddress(), new String(responseBytes), responseBytes.length);
 

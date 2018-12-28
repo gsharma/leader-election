@@ -2,18 +2,49 @@ package com.github.leaderelection;
 
 import java.io.IOException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * A heartbeat-based failure detector implementation.
  * 
  * @author gaurav
  */
-public final class HeartbeatFailureDetector implements FailureDetector {
+public final class HeartbeatFailureDetector extends Thread implements FailureDetector {
+  private static final Logger logger =
+      LogManager.getLogger(HeartbeatFailureDetector.class.getSimpleName());
+
   private final TCPTransport transport;
   private final MemberGroup memberGroup;
+  private final Id sourceMemberId;
 
-  public HeartbeatFailureDetector(final TCPTransport transport, final MemberGroup memberGroup) {
+  private long heartbeatIntervalMillis = 5_000L;
+
+  private int retryThreshold = 5;
+
+  public HeartbeatFailureDetector(final TCPTransport transport, final MemberGroup memberGroup,
+      final Id sourceMemberId) {
+    setName("failure-detector");
+    setDaemon(true);
     this.transport = transport;
     this.memberGroup = memberGroup;
+    this.sourceMemberId = sourceMemberId;
+  }
+
+  @Override
+  public void run() {
+    while (!isInterrupted()) {
+      try {
+        final Member sourceMember = memberGroup.findMember(sourceMemberId);
+        final HeartbeatRequest heartbeat =
+            new HeartbeatRequest(sourceMemberId, sourceMember.currentEpoch());
+        for (final Member member : memberGroup.allMembers()) {
+        }
+
+        sleep(heartbeatIntervalMillis);
+      } catch (InterruptedException interrupted) {
+      }
+    }
   }
 
   @Override
@@ -24,8 +55,8 @@ public final class HeartbeatFailureDetector implements FailureDetector {
 
   @Override
   public boolean init() {
-    // TODO
-    return false;
+    start();
+    return true;
   }
 
   @Override
@@ -37,11 +68,12 @@ public final class HeartbeatFailureDetector implements FailureDetector {
   public boolean tini() {
     // TODO
     try {
+      interrupt();
       transport.shutdown();
     } catch (IOException problem) {
       // TODO
     }
-    return false;
+    return true;
   }
 
 }
