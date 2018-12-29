@@ -50,6 +50,8 @@ public final class RandomId implements Id {
     return true;
   }
 
+  public RandomId() {}
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
