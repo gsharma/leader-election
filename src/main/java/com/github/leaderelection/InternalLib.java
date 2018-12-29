@@ -19,9 +19,10 @@ final class InternalLib {
   {
     objectMapper.setVisibility(objectMapper.getSerializationConfig().getDefaultVisibilityChecker()
         .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
-        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+        .withGetterVisibility(JsonAutoDetect.Visibility.ANY)
         .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
-        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
+        .withCreatorVisibility(JsonAutoDetect.Visibility.ANY));
+    objectMapper.enableDefaultTyping();
   }
 
   /**

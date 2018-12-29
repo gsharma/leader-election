@@ -16,31 +16,6 @@ public final class ElectionRequest implements Request {
   }
 
   @Override
-  public byte[] serialize() {
-    byte[] serialized = new byte[0];
-    try {
-      serialized = InternalLib.getObjectMapper().writeValueAsBytes(this);
-    } catch (Exception serDeProblem) {
-      // logger.error(String.format("Encountered error during serialization of %s", toString()),
-      // serDeProblem);
-    }
-    return serialized;
-  }
-
-  @Override
-  public Request deserialize(byte[] flattenedRequest) {
-    Request deserializedRequest = null;
-    try {
-      deserializedRequest =
-          InternalLib.getObjectMapper().readValue(flattenedRequest, ElectionRequest.class);
-    } catch (Exception serDeProblem) {
-      // logger.error("Encountered error during deserialization of flattened request",
-      // serDeProblem);
-    }
-    return deserializedRequest;
-  }
-
-  @Override
   public RequestType getType() {
     return type;
   }
@@ -96,5 +71,8 @@ public final class ElectionRequest implements Request {
     }
     return true;
   }
+
+  // for ser-de
+  private ElectionRequest() {}
 
 }

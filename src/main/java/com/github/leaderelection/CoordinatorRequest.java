@@ -6,38 +6,13 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public final class CoordinatorRequest implements Request {
-  private Id leaderId;
+  private Id senderId;
   private Epoch epoch;
   private final RequestType type = RequestType.COORDINATOR;
 
-  public CoordinatorRequest(final Id leaderId, final Epoch epoch) {
-    this.leaderId = leaderId;
+  public CoordinatorRequest(final Id senderId, final Epoch epoch) {
+    this.senderId = senderId;
     this.epoch = epoch;
-  }
-
-  @Override
-  public byte[] serialize() {
-    byte[] serialized = new byte[0];
-    try {
-      serialized = InternalLib.getObjectMapper().writeValueAsBytes(this);
-    } catch (Exception serDeProblem) {
-      // logger.error(String.format("Encountered error during serialization of %s", toString()),
-      // serDeProblem);
-    }
-    return serialized;
-  }
-
-  @Override
-  public Request deserialize(byte[] flattenedRequest) {
-    Request deserializedRequest = null;
-    try {
-      deserializedRequest =
-          InternalLib.getObjectMapper().readValue(flattenedRequest, CoordinatorRequest.class);
-    } catch (Exception serDeProblem) {
-      // logger.error("Encountered error during deserialization of flattened request",
-      // serDeProblem);
-    }
-    return deserializedRequest;
   }
 
   @Override
@@ -47,7 +22,7 @@ public final class CoordinatorRequest implements Request {
 
   @Override
   public Id getSenderId() {
-    return leaderId;
+    return senderId;
   }
 
   @Override
@@ -60,7 +35,7 @@ public final class CoordinatorRequest implements Request {
     final int prime = 31;
     int result = 1;
     result = prime * result + ((epoch == null) ? 0 : epoch.hashCode());
-    result = prime * result + ((leaderId == null) ? 0 : leaderId.hashCode());
+    result = prime * result + ((senderId == null) ? 0 : senderId.hashCode());
     result = prime * result + ((type == null) ? 0 : type.hashCode());
     return result;
   }
@@ -84,11 +59,11 @@ public final class CoordinatorRequest implements Request {
     } else if (!epoch.equals(other.epoch)) {
       return false;
     }
-    if (leaderId == null) {
-      if (other.leaderId != null) {
+    if (senderId == null) {
+      if (other.senderId != null) {
         return false;
       }
-    } else if (!leaderId.equals(other.leaderId)) {
+    } else if (!senderId.equals(other.senderId)) {
       return false;
     }
     if (type != other.type) {
@@ -96,5 +71,8 @@ public final class CoordinatorRequest implements Request {
     }
     return true;
   }
+
+  // for ser-de
+  private CoordinatorRequest() {}
 
 }

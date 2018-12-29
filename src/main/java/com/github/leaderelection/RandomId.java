@@ -11,7 +11,7 @@ public final class RandomId implements Id {
   private final UUID id = UUID.randomUUID();
 
   @Override
-  public String id() {
+  public String getId() {
     return id.toString();
   }
 

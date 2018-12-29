@@ -39,7 +39,7 @@ public final class Epoch implements Comparable<Epoch> {
     return this.compareTo(other) > 0;
   }
 
-  public long currentValue() {
+  public long getEpoch() {
     return epoch;
   }
 

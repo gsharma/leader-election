@@ -11,32 +11,45 @@ import org.junit.Test;
  */
 public final class SerdeTest {
 
-  // TODO: fix me
   @Test
   public void testRequestSerDe() {
     Request request = new HeartbeatRequest(new RandomId(), new Epoch());
     byte[] serializedRequest = request.serialize();
-    assertEquals(0, serializedRequest.length);
+    assertEquals(97, serializedRequest.length);
     Request deserializedRequest =
         new HeartbeatRequest(new RandomId(), new Epoch()).deserialize(serializedRequest);
-    // assertEquals(request, deserializedRequest);
+    assertEquals(request, deserializedRequest);
 
     request = new ElectionRequest(new RandomId(), new Epoch());
     serializedRequest = request.serialize();
-    assertEquals(0, serializedRequest.length);
+    assertEquals(96, serializedRequest.length);
     deserializedRequest =
         new ElectionRequest(new RandomId(), new Epoch()).deserialize(serializedRequest);
-    // assertEquals(request, deserializedRequest);
+    assertEquals(request, deserializedRequest);
 
     request = new CoordinatorRequest(new RandomId(), new Epoch());
     serializedRequest = request.serialize();
-    assertEquals(0, serializedRequest.length);
+    assertEquals(99, serializedRequest.length);
     deserializedRequest =
         new CoordinatorRequest(new RandomId(), new Epoch()).deserialize(serializedRequest);
-    // assertEquals(request, deserializedRequest);
+    assertEquals(request, deserializedRequest);
   }
 
   @Test
-  public void testResponseSerDe() {}
+  public void testResponseSerDe() {
+    Response response = new HeartbeatResponse(new RandomId(), new Epoch());
+    byte[] serializedResponse = response.serialize();
+    assertEquals(97, serializedResponse.length);
+    Response deserializedResponse =
+        new HeartbeatResponse(new RandomId(), new Epoch()).deserialize(serializedResponse);
+    assertEquals(response, deserializedResponse);
+
+    response = new OkResponse(new RandomId(), new Epoch());
+    serializedResponse = response.serialize();
+    assertEquals(90, serializedResponse.length);
+    deserializedResponse =
+        new OkResponse(new RandomId(), new Epoch()).deserialize(serializedResponse);
+    assertEquals(response, deserializedResponse);
+  }
 
 }

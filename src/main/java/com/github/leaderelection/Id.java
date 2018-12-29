@@ -10,8 +10,8 @@ import java.util.function.Function;
 public interface Id extends Function<Void, String>, Comparable<Id> {
   @Override
   default String apply(Void blah) {
-    return id();
+    return getId();
   }
 
-  String id();
+  String getId();
 }

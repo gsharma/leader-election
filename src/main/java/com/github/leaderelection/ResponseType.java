@@ -5,6 +5,6 @@ package com.github.leaderelection;
  * 
  * @author gaurav
  */
-public enum RequestType {
-  HEARTBEAT, ELECTION, COORDINATOR;
+public enum ResponseType {
+  HEARTBEAT, OK;
 }

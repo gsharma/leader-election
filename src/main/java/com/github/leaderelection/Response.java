@@ -3,33 +3,33 @@ package com.github.leaderelection;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
- * A request skeleton.
+ * A response skeleton.
  * 
  * @author gaurav
  */
-public interface Request {
+public interface Response {
 
-  RequestType getType();
+  ResponseType getType();
 
   @JsonDeserialize(as = RandomId.class)
   Id getSenderId();
 
   Epoch getEpoch();
 
-  // Deserialize and reconstruct the request object. Ideally, this should be a static
-  // function not requiring the call to default request implementation constructor.
-  public default Request deserialize(byte[] flattenedRequest) {
-    Request deserializedRequest = null;
+  // Deserialize and reconstruct the response object. Ideally, this should be a static
+  // function not requiring the call to default response implementation constructor.
+  public default Response deserialize(byte[] flattenedResponse) {
+    Response deserializedResponse = null;
     try {
-      deserializedRequest = InternalLib.getObjectMapper().readValue(flattenedRequest, getClass());
+      deserializedResponse = InternalLib.getObjectMapper().readValue(flattenedResponse, getClass());
     } catch (Exception serDeProblem) {
-      // logger.error("Encountered error during deserialization of flattened request",
+      // logger.error("Encountered error during deserialization of flattened response",
       // serDeProblem);
     }
-    return deserializedRequest;
+    return deserializedResponse;
   }
 
-  // Flatten the request to a byte[]
+  // Flatten the response to a byte[]
   public default byte[] serialize() {
     byte[] serialized = new byte[0];
     try {

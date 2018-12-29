@@ -6,38 +6,13 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public final class HeartbeatRequest implements Request {
-  private final Id senderId;
-  private final Epoch epoch;
-  private final RequestType type = RequestType.HEARTBEAT;
+  private Id senderId;
+  private Epoch epoch;
+  private RequestType type = RequestType.HEARTBEAT;
 
   public HeartbeatRequest(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
-  }
-
-  @Override
-  public byte[] serialize() {
-    byte[] serialized = new byte[0];
-    try {
-      serialized = InternalLib.getObjectMapper().writeValueAsBytes(this);
-    } catch (Exception serDeProblem) {
-      // logger.error(String.format("Encountered error during serialization of %s", toString()),
-      // serDeProblem);
-    }
-    return serialized;
-  }
-
-  @Override
-  public Request deserialize(byte[] flattenedRequest) {
-    Request deserializedRequest = null;
-    try {
-      deserializedRequest =
-          InternalLib.getObjectMapper().readValue(flattenedRequest, HeartbeatRequest.class);
-    } catch (Exception serDeProblem) {
-      // logger.error("Encountered error during deserialization of flattened request",
-      // serDeProblem);
-    }
-    return deserializedRequest;
   }
 
   @Override
@@ -96,5 +71,8 @@ public final class HeartbeatRequest implements Request {
     }
     return true;
   }
+
+  // for ser-de
+  private HeartbeatRequest() {}
 
 }
