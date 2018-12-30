@@ -75,4 +75,12 @@ public final class CoordinatorRequest implements Request {
   // for ser-de
   private CoordinatorRequest() {}
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("CoordinatorRequest [senderId=").append(senderId).append(", epoch=")
+        .append(epoch).append(", type=").append(type).append("]");
+    return builder.toString();
+  }
+
 }

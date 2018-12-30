@@ -133,9 +133,14 @@ public final class TCPTransport {
     if (bytesRead == -1) {
       // end of stream
     }
-    logger.info("Client received response from server {} bytes:{}",
+    // trim to buffer's non-zero bytes
+    final byte[] bytes = new byte[totalBytesRead];
+    buffer.flip();
+    buffer.get(bytes);
+    logger.info("Client received response from server {}, {} bytes",
         clientChannel.getRemoteAddress(), totalBytesRead);
-    return buffer.array();
+    // return buffer.array();
+    return bytes;
   }
 
   private static int write(final SocketChannel clientChannel, final byte[] payload)
@@ -217,7 +222,6 @@ public final class TCPTransport {
         final Iterator<SelectionKey> iterator = selectedKeys.iterator();
         while (iterator.hasNext()) {
           final SelectionKey key = iterator.next();
-          iterator.remove();
 
           // accept
           if (key.isValid() && key.isAcceptable()) {
@@ -264,6 +268,8 @@ public final class TCPTransport {
           else if (key.isValid() && key.isWritable()) {
             // logger.info("WRITABLE");
           }
+          
+          iterator.remove();
         }
       }
     }

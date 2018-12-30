@@ -75,4 +75,12 @@ public final class ElectionRequest implements Request {
   // for ser-de
   private ElectionRequest() {}
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("ElectionRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
+        .append(", type=").append(type).append("]");
+    return builder.toString();
+  }
+
 }

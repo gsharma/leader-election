@@ -75,4 +75,12 @@ public final class HeartbeatRequest implements Request {
   // for ser-de
   private HeartbeatRequest() {}
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("HeartbeatRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
+        .append(", type=").append(type).append("]");
+    return builder.toString();
+  }
+
 }
