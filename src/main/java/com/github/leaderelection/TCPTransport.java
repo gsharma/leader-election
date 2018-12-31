@@ -245,7 +245,7 @@ public final class TCPTransport {
 
           // accept
           if (key.isValid() && key.isAcceptable()) {
-            logger.info("Key is acceptable");
+            // logger.info("Key is acceptable");
             final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
@@ -256,7 +256,7 @@ public final class TCPTransport {
 
           // read
           else if (key.isValid() && key.isReadable()) {
-            logger.info("Key is readable");
+            // logger.info("Key is readable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
@@ -264,18 +264,10 @@ public final class TCPTransport {
 
             final byte[] payload = read(clientChannel);
 
-            /*
-             * final int bytesRead = clientChannel.read(buffer); if (bytesRead == -1) {
-             * clientChannel.close(); key.cancel();
-             * logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
-             * }
-             * 
-             * buffer.flip(); final byte[] payload = buffer.array();
-             */
-
             if (payload.length > 0) {
               logger.info("Server received from client {} payload:{}",
                   clientChannel.getRemoteAddress(), new String(payload).trim());
+
               // TODO
               responseHandler.handleResponse(payload);
 

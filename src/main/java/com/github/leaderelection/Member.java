@@ -31,11 +31,19 @@ public final class Member implements Comparable<Member> {
     this.transport = transport;
   }
 
-  public void serviceRequest(final ElectionRequest electionRequest) {}
-
-  public void serviceRequest(final HeartbeatRequest heartbeatRequest) {}
-
-  public void serviceRequest(final CoordinatorRequest coordinatorRequest) {}
+  public Response serviceRequest(final Request request) {
+    Response response = null;
+    switch (request.getType()) {
+      case HEARTBEAT:
+        response = new HeartbeatResponse(id, epoch);
+        break;
+      case ELECTION:
+        break;
+      case COORDINATOR:
+        break;
+    }
+    return response;
+  }
 
   public boolean isLeader() {
     return leader;

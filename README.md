@@ -1,3 +1,6 @@
+[![Build Status](https://img.shields.io/travis/gsharma/leader-election/master.svg)](https://travis-ci.org/gsharma/leader-election)
+[![Test Coverage](https://img.shields.io/codecov/c/github/gsharma/leader-election/master.svg)](https://codecov.io/github/gsharma/leader-election?branch=master)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=com.github.leaderelection:leader-election&metric=alert_status)](https://sonarcloud.io/dashboard?id=com.github.leaderelection:leader-election)
 [![Licence](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/gsharma/leader-election/blob/master/LICENSE)
 
 # Leader Election
