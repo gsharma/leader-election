@@ -22,7 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * A simple TCP transport handler.
+ * A simple TCP transport handler - note that this is designed to serve the needs of both a client
+ * and a server.
  * 
  * @author gaurav
  */
@@ -43,13 +44,16 @@ public final class TCPTransport {
     private final int port;
     private final ServerSocketChannel serverChannel;
     private final ServerListener serverListener;
+    private final SocketChannel clientChannel;
 
     private ServerMetadata(final String host, final int port,
-        final ServerSocketChannel serverChannel, final ServerListener serverListener) {
+        final ServerSocketChannel serverChannel, final ServerListener serverListener)
+        throws IOException {
       this.host = host;
       this.port = port;
       this.serverChannel = serverChannel;
       this.serverListener = serverListener;
+      clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
     }
   }
 
@@ -91,16 +95,18 @@ public final class TCPTransport {
     return serverId;
   }
 
-  // TODO: finish me
+  /**
+   * Send a payload to the server and receive a response from it.
+   */
   public byte[] send(final UUID serverId, final byte[] payload) throws IOException {
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
       throw new UnsupportedOperationException(
           String.format("No server found for serverId:%s", serverId.toString()));
     }
-    logger.info("Client sending to server {}:{} payload:{}", server.host, server.port, payload);
-    final SocketChannel clientChannel =
-        SocketChannel.open(new InetSocketAddress(server.host, server.port));
+    logger.info("Client sending to server {}:{} {}bytes payload", server.host, server.port,
+        payload.length);
+    final SocketChannel clientChannel = server.clientChannel;
     clientChannel.configureBlocking(false);
     final Socket socket = clientChannel.socket();
     socket.setTcpNoDelay(true);
@@ -116,9 +122,9 @@ public final class TCPTransport {
 
     final byte[] serverResponse = read(clientChannel);
 
-    clientChannel.close();
-    logger.info("Client received response from server {}:{} bytes:{}", server.host, server.port,
-        new String(serverResponse));
+    // clientChannel.close();
+    logger.info("Client received response from server {}:{} {}bytes", server.host, server.port,
+        serverResponse.length);
     return serverResponse;
   }
 
@@ -132,13 +138,16 @@ public final class TCPTransport {
     }
     if (bytesRead == -1) {
       // end of stream
+      clientChannel.close();
+      logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+      return new byte[0];
     }
     // trim to buffer's non-zero bytes
     final byte[] bytes = new byte[totalBytesRead];
     buffer.flip();
     buffer.get(bytes);
-    logger.info("Client received response from server {}, {} bytes",
-        clientChannel.getRemoteAddress(), totalBytesRead);
+    // logger.info("Client received response from server {}, {} bytes",
+    // clientChannel.getRemoteAddress(), totalBytesRead);
     // return buffer.array();
     return bytes;
   }
@@ -152,8 +161,8 @@ public final class TCPTransport {
       bytesWritten = clientChannel.write(buffer);
       totalBytesWritten += bytesWritten;
     }
-    logger.info("Server sending to client {} response:{}, payload:{} bytes, written:{} bytes",
-        clientChannel.getRemoteAddress(), new String(payload), payload.length, totalBytesWritten);
+    // logger.info("Server sending to client {} response:{}, payload:{} bytes, written:{} bytes",
+    // clientChannel.getRemoteAddress(), new String(payload), payload.length, totalBytesWritten);
     return totalBytesWritten;
   }
 
@@ -166,8 +175,8 @@ public final class TCPTransport {
       throw new UnsupportedOperationException(
           String.format("No server found for serverId:%s", serverId.toString()));
     }
-    ServerSocketChannel serverChannel = server.serverChannel;
-    close(serverChannel);
+    close(server.serverChannel);
+    close(server.clientChannel);
     final Thread listenerThread = server.serverListener;
     listenerThread.interrupt();
     activeServers.remove(serverId);
@@ -181,7 +190,17 @@ public final class TCPTransport {
   }
 
   /**
-   * Close the given server socket.
+   * Close the given client channel.
+   */
+  private void close(final SocketChannel clientChannel) throws IOException {
+    if (clientChannel != null && clientChannel.isOpen()) {
+      logger.info("Closing client socket connected to {}", clientChannel.getRemoteAddress());
+      clientChannel.close();
+    }
+  }
+
+  /**
+   * Close the given server channel.
    */
   private void close(final ServerSocketChannel serverChannel) throws IOException {
     if (serverChannel != null && serverChannel.isOpen()) {
@@ -214,6 +233,7 @@ public final class TCPTransport {
     private void service(final Selector selector) throws IOException {
       final ByteBuffer buffer = ByteBuffer.allocate(256);
       while (true) {
+        // logger.info("In service");
         final int channelsReady = selector.select();
         if (channelsReady == 0) {
           continue;
@@ -225,20 +245,61 @@ public final class TCPTransport {
 
           // accept
           if (key.isValid() && key.isAcceptable()) {
+            logger.info("Key is acceptable");
             final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
             socket.setTcpNoDelay(true);
             clientChannel.register(selector, SelectionKey.OP_READ);
-            // clientChannel.register(selector, SelectionKey.OP_WRITE);
+            // clientChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
           }
 
           // read
           else if (key.isValid() && key.isReadable()) {
+            logger.info("Key is readable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
             socket.setTcpNoDelay(true);
+
+            final byte[] payload = read(clientChannel);
+
+            /*
+             * final int bytesRead = clientChannel.read(buffer); if (bytesRead == -1) {
+             * clientChannel.close(); key.cancel();
+             * logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+             * }
+             * 
+             * buffer.flip(); final byte[] payload = buffer.array();
+             */
+
+            if (payload.length > 0) {
+              logger.info("Server received from client {} payload:{}",
+                  clientChannel.getRemoteAddress(), new String(payload).trim());
+              // TODO
+              responseHandler.handleResponse(payload);
+
+              // tmp: echoing back to client with tstamp
+              final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
+              logger.info("Server sending to client {} response:{} {}bytes",
+                  clientChannel.getRemoteAddress(), new String(responseBytes),
+                  responseBytes.length);
+
+              write(clientChannel, responseBytes);
+              buffer.clear();
+            }
+          }
+
+          // write
+          else if (key.isValid() && key.isWritable()) {
+            logger.info("Key is writable");
+            final SocketChannel clientChannel = (SocketChannel) key.channel();
+            clientChannel.configureBlocking(false);
+            final Socket socket = clientChannel.socket();
+            socket.setTcpNoDelay(true);
+
+            // final byte[] serverResponse = read(clientChannel);
+
             final int bytesRead = clientChannel.read(buffer);
             if (bytesRead == -1) {
               clientChannel.close();
@@ -248,27 +309,24 @@ public final class TCPTransport {
 
             buffer.flip();
             final byte[] payload = buffer.array();
-            logger.info("Server received from client {} payload:{}",
-                clientChannel.getRemoteAddress(), new String(payload).trim());
-            // TODO
-            responseHandler.handleResponse(payload);
 
-            // tmp: echoing back to client with tstamp
-            final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
-            logger.info("Server sending to client {} response:{} bytes:{}",
-                clientChannel.getRemoteAddress(), new String(responseBytes), responseBytes.length);
+            if (payload.length > 0) {
+              logger.info("Server received from client {} payload:{}",
+                  clientChannel.getRemoteAddress(), new String(payload).trim());
+              // TODO
+              responseHandler.handleResponse(payload);
 
-            // if (key.isWritable()) {
-            write(clientChannel, responseBytes);
-            // }
-            buffer.clear();
+              // tmp: echoing back to client with tstamp
+              final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
+              logger.info("Server sending to client {} response:{} {}bytes",
+                  clientChannel.getRemoteAddress(), new String(responseBytes),
+                  responseBytes.length);
+
+              write(clientChannel, responseBytes);
+              buffer.clear();
+            }
           }
 
-          // write
-          else if (key.isValid() && key.isWritable()) {
-            // logger.info("WRITABLE");
-          }
-          
           iterator.remove();
         }
       }

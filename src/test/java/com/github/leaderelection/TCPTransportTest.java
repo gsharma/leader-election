@@ -1,6 +1,7 @@
 package com.github.leaderelection;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -34,8 +35,8 @@ public final class TCPTransportTest {
     // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
     final String payloadOne = "one";
     byte[] response = transport.send(serverOne, payloadOne.getBytes());
-    assertNotNull(response);
-    logger.info("Client received from server {}:{} response:{}, {} bytes", host, portOne,
+    assertTrue(response.length > 0);
+    logger.info("Client received from server {}:{} responseOne:{}, {}bytes", host, portOne,
         new String(response), response.length);
     transport.stopServer(serverOne);
     // assertFalse(serverChannelOne.isOpen());
@@ -55,13 +56,13 @@ public final class TCPTransportTest {
     // push payloads to both servers
     for (int iter = 0; iter < 2; iter++) {
       response = transport.send(serverTwo, "two".getBytes());
-      assertNotNull(response);
-      logger.info("Client received from server {}:{} response:{}, {} bytes", host, portTwo,
+      assertTrue(response.length > 0);
+      logger.info("Client received from server {}:{} responseTwo:{}, {}bytes", host, portTwo,
           new String(response), response.length);
 
       response = transport.send(serverThree, "three".getBytes());
-      assertNotNull(response);
-      logger.info("Client received from server {}:{} response:{}, {} bytes", host, portThree,
+      assertTrue(response.length > 0);
+      logger.info("Client received from server {}:{} responseThree:{}, {}bytes", host, portThree,
           new String(response), response.length);
     }
 
