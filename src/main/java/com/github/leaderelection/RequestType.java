@@ -6,5 +6,5 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public enum RequestType {
-  HEARTBEAT, ELECTION, COORDINATOR;
+  HEARTBEAT, ELECTION, COORDINATOR, PING, PING_REQUEST, FAILED;
 }

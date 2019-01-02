@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * A heartbeat-based failure detector implementation.
+ * A simple heartbeat-based failure detector implementation.
  * 
  * @author gaurav
  */

@@ -17,31 +17,17 @@ public final class Member implements Comparable<Member> {
   private boolean leader;
 
   private final MemberGroup memberGroup;
-  private final FailureDetector failureDetector;
-  private final TCPTransport transport;
 
-  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup,
-      final FailureDetector failureDetector, final TCPTransport transport) {
+  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup) {
     this.id = id;
     this.host = host;
     this.port = port;
 
     this.memberGroup = memberGroup;
-    this.failureDetector = failureDetector;
-    this.transport = transport;
   }
 
   public Response serviceRequest(final Request request) {
     Response response = null;
-    switch (request.getType()) {
-      case HEARTBEAT:
-        response = new HeartbeatResponse(id, epoch);
-        break;
-      case ELECTION:
-        break;
-      case COORDINATOR:
-        break;
-    }
     return response;
   }
 
@@ -67,6 +53,10 @@ public final class Member implements Comparable<Member> {
 
   public Id getId() {
     return id;
+  }
+
+  public MemberGroup getMemberGroup() {
+    return memberGroup;
   }
 
   public String getHost() {

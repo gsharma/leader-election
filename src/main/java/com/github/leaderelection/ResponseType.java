@@ -6,5 +6,5 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public enum ResponseType {
-  HEARTBEAT, OK;
+  HEARTBEAT, OK, ACK;
 }

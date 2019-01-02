@@ -6,7 +6,7 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public enum Status {
-  UNKNOWN(-9), ALIVE(0), DEAD(9);
+  UNKNOWN(-9), ALIVE(0), SUSPECTED_DEAD(9), DEAD(99);
 
   private final int status;
 
