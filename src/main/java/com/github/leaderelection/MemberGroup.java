@@ -13,17 +13,16 @@ public final class MemberGroup {
   private final List<Member> members = new ArrayList<>();
   private final Id id;
 
-  public MemberGroup(final Id id, final List<Member> members) {
+  public MemberGroup(final Id id) {
     this.id = id;
-    for (final Member member : members) {
-      members.add(member);
-    }
   }
 
+  // TODO: should be done via broadcast to all members in the group
   public boolean removeMember(final Member member) {
     return members.remove(member);
   }
 
+  // TODO: should be done via broadcast to all members in the group
   public boolean addMember(final Member member) {
     return members.add(member);
   }
@@ -65,6 +64,13 @@ public final class MemberGroup {
       }
     }
     return smallerMembers;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("MemberGroup [members=").append(members).append(", ").append(id).append("]");
+    return builder.toString();
   }
 
 }

@@ -1,29 +1,75 @@
 package com.github.leaderelection;
 
+import java.io.IOException;
+import java.util.UUID;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Skeleton for a member server participating in leader election as part of a group of servers.
+ * 
+ * Other Member objects maintained by a local Member as part of its MemberGroup represent this local
+ * Member's view of their state at any given instance. Note that this perceived state view might
+ * deviate from the actual state of the member.
  * 
  * @author gaurav
  */
 public final class Member implements Comparable<Member> {
+  private static final Logger logger = LogManager.getLogger(Member.class.getSimpleName());
+
   // immutables
   private final Id id;
   private final String host;
   private final int port;
+  private final TCPTransport transport;
+  private UUID serverTransportId;
+
+  private SwimFailureDetector failureDetector;
 
   // mutables
-  private Status status;
+  private volatile Status status = Status.UNKNOWN;
   private Epoch epoch = new Epoch();
   private boolean leader;
 
   private final MemberGroup memberGroup;
 
-  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup) {
+  public Member(final TCPTransport transport, final Id id, final String host, final int port,
+      final MemberGroup memberGroup) throws IOException {
     this.id = id;
     this.host = host;
     this.port = port;
-
+    this.transport = transport;
     this.memberGroup = memberGroup;
+  }
+
+  // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
+  // purposes - typically, there will be a single Member instance in a process/thread
+  public synchronized void init() throws IOException {
+    logger.info("Initializing member:{}", id);
+    if (status != Status.ALIVE) {
+      serverTransportId = transport.bindServer(host, port, null);
+      memberGroup.addMember(this);
+      failureDetector = new SwimFailureDetector(transport, memberGroup, id);
+      failureDetector.init();
+      status = Status.ALIVE;
+    } else {
+      logger.info("Cannot re-init an already alive member");
+    }
+  }
+
+  // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
+  // purposes - typically, there will be a single Member instance in a process/thread
+  public synchronized void shutdown() throws IOException {
+    if (status != Status.DEAD) {
+      transport.stopServer(serverTransportId);
+      serverTransportId = null;
+      failureDetector.tini();
+      status = Status.DEAD;
+      logger.info("Shutdown member:{}", id);
+    } else {
+      logger.info("Cannot shutdown an already dead member");
+    }
   }
 
   public Response serviceRequest(final Request request) {
@@ -41,6 +87,10 @@ public final class Member implements Comparable<Member> {
 
   public Epoch currentEpoch() {
     return epoch;
+  }
+
+  public UUID getServerTransportId() {
+    return serverTransportId;
   }
 
   public Status getStatus() {
@@ -116,8 +166,10 @@ public final class Member implements Comparable<Member> {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("Member [id=").append(id).append(", host=").append(host).append(", port=")
-        .append(port).append(", status=").append(status).append("]");
+    builder.append("Member [").append(id).append(", host=").append(host).append(", port=")
+        .append(port).append(", serverTransportId=").append(serverTransportId).append(", status=")
+        .append(status).append(", epoch=").append(epoch).append(", leader=").append(leader)
+        .append(", groupId=").append(memberGroup.getId()).append("]");
     return builder.toString();
   }
 

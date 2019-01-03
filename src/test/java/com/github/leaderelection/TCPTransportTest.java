@@ -16,18 +16,18 @@ import org.junit.Test;
  * @author gaurav
  */
 public final class TCPTransportTest {
-  private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
+  private static final Logger logger = LogManager.getLogger(TCPTransportTest.class.getSimpleName());
 
   @Test
   public void testServerLifecycle() throws IOException {
     final String host = "localhost";
     int portOne = 5000;
-    final ResponseHandler responseHandler = new ResponseHandler() {
+    final ResponseHandler responseHandler = null;/*new ResponseHandler() {
       @Override
       public void handleResponse(byte[] response) {
         // TODO
       }
-    };
+    };*/
     final TCPTransport transport = new TCPTransport();
     final UUID serverOne = transport.bindServer(host, portOne, responseHandler);
     assertNotNull(serverOne);

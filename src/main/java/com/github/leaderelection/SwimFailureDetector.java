@@ -1,6 +1,5 @@
 package com.github.leaderelection;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,18 +39,24 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   public void run() {
     while (!isInterrupted()) {
       try {
-        // select a random member from the group other than the sourceMember
-        final Member memberToProbe = selectRandomMember(sourceMember);
+        // no point wasting cycles with only self in the group
+        if (memberGroup.allMembers().size() > 1) {
+          // select a random member from the group other than the sourceMember
+          final Member memberToProbe = selectRandomMember(sourceMember);
 
-        // send a ping probe to selected member
-        final SwimFDPingProbe pingProbe = new SwimFDPingProbe(sourceMemberId, epoch);
+          // send a ping probe to selected member
+          final SwimFDPingProbe pingProbe = new SwimFDPingProbe(sourceMemberId, epoch);
 
-        // TODO 
-        // Response response = transport.send(memberToProbe, pingProbe);
-        // AckResponse ackResponse = null;
-        // if (response.getType() == ResponseType.ACK) {
-        //   ackResponse = (AckResponse) response;
-        // }
+          // TODO
+          // Response response = transport.send(memberToProbe, pingProbe);
+          // AckResponse ackResponse = null;
+          // if (response.getType() == ResponseType.ACK) {
+          // ackResponse = (AckResponse) response;
+          // }
+        } else {
+          logger.info("[{}] Failure detector waiting for other members to join group",
+              sourceMemberId);
+        }
 
         sleep(protocolIntervalMillis);
       } catch (InterruptedException interrupted) {
@@ -64,10 +69,10 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
     allMembers.remove(sourceMember);
     int memberCount = allMembers.size();
     int index = (int) ((1 - Math.random()) * memberCount);
-    if (index == memberCount) {
+    if (index == memberCount && index > 0) {
       --index;
     }
-    logger.info("Selected member at index {} from {} members in group", index,
+    logger.info("[{}] Selected member at index {} from {} members in group", sourceMemberId, index,
         memberGroup.allMembers().size());
     return allMembers.get(index);
   }
@@ -80,6 +85,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public boolean init() {
+    logger.info("[{}] Starting failure detector for {}", sourceMemberId, sourceMember);
     start();
     return true;
   }
@@ -92,12 +98,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   @Override
   public boolean tini() {
     // TODO
-    try {
-      interrupt();
-      transport.shutdown();
-    } catch (IOException problem) {
-      // TODO
-    }
+    logger.info("[{}] Stopping failure detector for {}", sourceMemberId, sourceMember);
+    interrupt();
     return true;
   }
 

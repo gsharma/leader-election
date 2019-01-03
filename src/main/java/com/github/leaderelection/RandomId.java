@@ -55,7 +55,7 @@ public final class RandomId implements Id {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("RandomId [id=").append(id.toString()).append("]");
+    builder.append("[id=").append(id.toString()).append("]");
     return builder.toString();
   }
 

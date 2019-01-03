@@ -95,6 +95,11 @@ public final class TCPTransport {
     return serverId;
   }
 
+  // TODO
+  public Response dispatch(final Member member, final Request request) {
+    return null;
+  }
+
   /**
    * Send a payload to the server and receive a response from it.
    */
@@ -172,17 +177,18 @@ public final class TCPTransport {
   public void stopServer(final UUID serverId) throws IOException {
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
-      throw new UnsupportedOperationException(
-          String.format("No server found for serverId:%s", serverId.toString()));
+      logger.error(String.format("No server found for serverId:%s", serverId.toString()));
+      return;
     }
-    close(server.serverChannel);
     close(server.clientChannel);
+    close(server.serverChannel);
     final Thread listenerThread = server.serverListener;
     listenerThread.interrupt();
     activeServers.remove(serverId);
   }
 
   public void shutdown() throws IOException {
+    logger.info("Shutting down transport layer");
     for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
       final UUID serverId = serverEntry.getKey();
       stopServer(serverId);
@@ -269,7 +275,9 @@ public final class TCPTransport {
                   clientChannel.getRemoteAddress(), new String(payload).trim());
 
               // TODO
-              responseHandler.handleResponse(payload);
+              if (responseHandler != null) {
+                responseHandler.handleResponse(payload);
+              }
 
               // tmp: echoing back to client with tstamp
               final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
