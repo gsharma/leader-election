@@ -3,6 +3,8 @@ package com.github.leaderelection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.fd.FailureDetector;
+
 /**
  * An implementation of the bully leader election algorithm.
  * 

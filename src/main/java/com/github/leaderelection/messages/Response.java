@@ -1,6 +1,10 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
+import com.github.leaderelection.InternalLib;
+import com.github.leaderelection.RandomId;
 
 /**
  * A response skeleton.

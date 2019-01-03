@@ -4,6 +4,14 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.github.leaderelection.messages.CoordinatorRequest;
+import com.github.leaderelection.messages.ElectionRequest;
+import com.github.leaderelection.messages.HeartbeatRequest;
+import com.github.leaderelection.messages.HeartbeatResponse;
+import com.github.leaderelection.messages.OkResponse;
+import com.github.leaderelection.messages.Request;
+import com.github.leaderelection.messages.Response;
+
 /**
  * Tests for the sanity/correctness of Request, Response serialization-deserialization.
  * 

@@ -1,10 +1,17 @@
-package com.github.leaderelection;
+package com.github.leaderelection.fd;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
+import com.github.leaderelection.Member;
+import com.github.leaderelection.MemberGroup;
+import com.github.leaderelection.TCPTransport;
+import com.github.leaderelection.messages.SwimFDPingProbe;
 
 /**
  * A SWIM-based failure detector implementation.

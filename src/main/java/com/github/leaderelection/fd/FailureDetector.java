@@ -1,4 +1,6 @@
-package com.github.leaderelection;
+package com.github.leaderelection.fd;
+
+import com.github.leaderelection.MemberGroup;
 
 /**
  * Skeleton for a failure detector.

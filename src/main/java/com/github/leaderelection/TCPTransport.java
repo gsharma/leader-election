@@ -21,6 +21,9 @@ import java.util.concurrent.locks.LockSupport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.messages.Request;
+import com.github.leaderelection.messages.Response;
+
 /**
  * A simple TCP transport handler - note that this is designed to serve the needs of both a client
  * and a server.

@@ -6,6 +6,10 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.fd.SwimFailureDetector;
+import com.github.leaderelection.messages.Request;
+import com.github.leaderelection.messages.Response;
+
 /**
  * Skeleton for a member server participating in leader election as part of a group of servers.
  * 

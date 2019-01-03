@@ -1,4 +1,4 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
 
 /**
  * All known response types.

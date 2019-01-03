@@ -1,4 +1,7 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
  * The FDAckResponse is received in response to either the FDPingProbe or to any subsequent

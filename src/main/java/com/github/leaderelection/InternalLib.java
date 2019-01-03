@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 
  * @author gaurav
  */
-final class InternalLib {
+public final class InternalLib {
   private static final transient Logger logger =
       LogManager.getLogger(InternalLib.class.getSimpleName());
   private static final ObjectMapper objectMapper = new ObjectMapper();

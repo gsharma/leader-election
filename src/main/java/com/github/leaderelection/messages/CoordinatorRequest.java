@@ -1,22 +1,21 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
- * Upon detecting the failure of another group member, the member simply broadcasts this information
- * to the rest of the group as a failed message. A member receiving this message deletes from its
- * local membership list.
+ * Sent by the winner of leader election round to announce victory.
  * 
  * @author gaurav
  */
-public final class SwimFDFailedMessage implements Request {
+public final class CoordinatorRequest implements Request {
   private Id senderId;
-  private Id failedId;
   private Epoch epoch;
-  private RequestType type = RequestType.FAILED;
+  private final RequestType type = RequestType.COORDINATOR;
 
-  public SwimFDFailedMessage(final Id senderId, final Epoch epoch, final Id failedId) {
+  public CoordinatorRequest(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
-    this.failedId = failedId;
   }
 
   @Override
@@ -27,10 +26,6 @@ public final class SwimFDFailedMessage implements Request {
   @Override
   public Id getSenderId() {
     return senderId;
-  }
-
-  public Id getFailedId() {
-    return failedId;
   }
 
   @Override
@@ -44,7 +39,6 @@ public final class SwimFDFailedMessage implements Request {
     int result = 1;
     result = prime * result + ((epoch == null) ? 0 : epoch.hashCode());
     result = prime * result + ((senderId == null) ? 0 : senderId.hashCode());
-    result = prime * result + ((failedId == null) ? 0 : failedId.hashCode());
     result = prime * result + ((type == null) ? 0 : type.hashCode());
     return result;
   }
@@ -57,10 +51,10 @@ public final class SwimFDFailedMessage implements Request {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof SwimFDFailedMessage)) {
+    if (!(obj instanceof CoordinatorRequest)) {
       return false;
     }
-    SwimFDFailedMessage other = (SwimFDFailedMessage) obj;
+    CoordinatorRequest other = (CoordinatorRequest) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -75,13 +69,6 @@ public final class SwimFDFailedMessage implements Request {
     } else if (!senderId.equals(other.senderId)) {
       return false;
     }
-    if (failedId == null) {
-      if (other.failedId != null) {
-        return false;
-      }
-    } else if (!failedId.equals(other.failedId)) {
-      return false;
-    }
     if (type != other.type) {
       return false;
     }
@@ -89,14 +76,13 @@ public final class SwimFDFailedMessage implements Request {
   }
 
   // for ser-de
-  private SwimFDFailedMessage() {}
+  private CoordinatorRequest() {}
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("SwimFDFailedMessage [senderId=").append(senderId).append(", epoch=")
-        .append(epoch).append(", type=").append(", failedId=").append(failedId).append(type)
-        .append("]");
+    builder.append("CoordinatorRequest [senderId=").append(senderId).append(", epoch=")
+        .append(epoch).append(", type=").append(type).append("]");
     return builder.toString();
   }
 

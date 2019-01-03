@@ -1,9 +1,15 @@
-package com.github.leaderelection;
+package com.github.leaderelection.fd;
 
 import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.github.leaderelection.Id;
+import com.github.leaderelection.Member;
+import com.github.leaderelection.MemberGroup;
+import com.github.leaderelection.TCPTransport;
+import com.github.leaderelection.messages.HeartbeatRequest;
 
 /**
  * A simple heartbeat-based failure detector implementation.

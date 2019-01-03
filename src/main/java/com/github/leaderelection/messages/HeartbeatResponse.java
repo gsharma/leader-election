@@ -1,17 +1,19 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
- * An OK Response is sent by non-leader candidate members participating in leader election as an
- * acknowledgement to give up on being a leader.
+ * This is part of the (HeartbeatRequest:HeartbeatResponse) tuple.
  * 
  * @author gaurav
  */
-public final class OkResponse implements Response {
+public final class HeartbeatResponse implements Response {
   private Id senderId;
   private Epoch epoch;
-  private ResponseType type = ResponseType.OK;
+  private ResponseType type = ResponseType.HEARTBEAT;
 
-  public OkResponse(final Id senderId, final Epoch epoch) {
+  public HeartbeatResponse(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
   }
@@ -32,7 +34,7 @@ public final class OkResponse implements Response {
   }
 
   // for ser-de
-  private OkResponse() {}
+  private HeartbeatResponse() {}
 
   @Override
   public int hashCode() {
@@ -52,10 +54,10 @@ public final class OkResponse implements Response {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof OkResponse)) {
+    if (!(obj instanceof HeartbeatResponse)) {
       return false;
     }
-    OkResponse other = (OkResponse) obj;
+    HeartbeatResponse other = (HeartbeatResponse) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;

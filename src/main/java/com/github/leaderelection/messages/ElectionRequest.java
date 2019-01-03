@@ -1,16 +1,19 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
- * This is part of the (HeartbeatRequest:HeartbeatResponse) tuple.
+ * Sent to announce leader election.
  * 
  * @author gaurav
  */
-public final class HeartbeatRequest implements Request {
+public final class ElectionRequest implements Request {
   private Id senderId;
   private Epoch epoch;
-  private RequestType type = RequestType.HEARTBEAT;
+  private final RequestType type = RequestType.ELECTION;
 
-  public HeartbeatRequest(final Id senderId, final Epoch epoch) {
+  public ElectionRequest(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
   }
@@ -48,10 +51,10 @@ public final class HeartbeatRequest implements Request {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof HeartbeatRequest)) {
+    if (!(obj instanceof ElectionRequest)) {
       return false;
     }
-    HeartbeatRequest other = (HeartbeatRequest) obj;
+    ElectionRequest other = (ElectionRequest) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -73,12 +76,12 @@ public final class HeartbeatRequest implements Request {
   }
 
   // for ser-de
-  private HeartbeatRequest() {}
+  private ElectionRequest() {}
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("HeartbeatRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
+    builder.append("ElectionRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
         .append(", type=").append(type).append("]");
     return builder.toString();
   }

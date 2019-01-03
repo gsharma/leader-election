@@ -1,16 +1,25 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
- * Sent by the winner of leader election round to announce victory.
+ * A Ping Probe sent by the Failure Detector (FD) to an arbitrary member in the group.
+ * 
+ * During each protocol period, a random member is selected from the group’s membership list and a
+ * ping message sent to it. The sender then waits for a replying ack from the receiver. If this is
+ * not received within the timeout (determined by the message round-trip time, which is chosen
+ * smaller than the protocol period), the non-responsive member is indirectly probed via other
+ * members using the FDPingRequestProbe.
  * 
  * @author gaurav
  */
-public final class CoordinatorRequest implements Request {
+public final class SwimFDPingProbe implements Request {
   private Id senderId;
   private Epoch epoch;
-  private final RequestType type = RequestType.COORDINATOR;
+  private RequestType type = RequestType.PING;
 
-  public CoordinatorRequest(final Id senderId, final Epoch epoch) {
+  public SwimFDPingProbe(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
   }
@@ -48,10 +57,10 @@ public final class CoordinatorRequest implements Request {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof CoordinatorRequest)) {
+    if (!(obj instanceof SwimFDPingProbe)) {
       return false;
     }
-    CoordinatorRequest other = (CoordinatorRequest) obj;
+    SwimFDPingProbe other = (SwimFDPingProbe) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -73,13 +82,13 @@ public final class CoordinatorRequest implements Request {
   }
 
   // for ser-de
-  private CoordinatorRequest() {}
+  private SwimFDPingProbe() {}
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("CoordinatorRequest [senderId=").append(senderId).append(", epoch=")
-        .append(epoch).append(", type=").append(type).append("]");
+    builder.append("SwimFDPingProbe [senderId=").append(senderId).append(", epoch=").append(epoch)
+        .append(", type=").append(type).append("]");
     return builder.toString();
   }
 

@@ -1,22 +1,26 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
- * Sent to announce leader election.
+ * An OK Response is sent by non-leader candidate members participating in leader election as an
+ * acknowledgement to give up on being a leader.
  * 
  * @author gaurav
  */
-public final class ElectionRequest implements Request {
+public final class OkResponse implements Response {
   private Id senderId;
   private Epoch epoch;
-  private final RequestType type = RequestType.ELECTION;
+  private ResponseType type = ResponseType.OK;
 
-  public ElectionRequest(final Id senderId, final Epoch epoch) {
+  public OkResponse(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
   }
 
   @Override
-  public RequestType getType() {
+  public ResponseType getType() {
     return type;
   }
 
@@ -29,6 +33,9 @@ public final class ElectionRequest implements Request {
   public Epoch getEpoch() {
     return epoch;
   }
+
+  // for ser-de
+  private OkResponse() {}
 
   @Override
   public int hashCode() {
@@ -48,10 +55,10 @@ public final class ElectionRequest implements Request {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof ElectionRequest)) {
+    if (!(obj instanceof OkResponse)) {
       return false;
     }
-    ElectionRequest other = (ElectionRequest) obj;
+    OkResponse other = (OkResponse) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -70,17 +77,6 @@ public final class ElectionRequest implements Request {
       return false;
     }
     return true;
-  }
-
-  // for ser-de
-  private ElectionRequest() {}
-
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append("ElectionRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
-        .append(", type=").append(type).append("]");
-    return builder.toString();
   }
 
 }

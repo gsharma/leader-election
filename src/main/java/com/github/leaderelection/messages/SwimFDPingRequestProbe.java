@@ -1,4 +1,7 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
  * During each protocol period, a random member is selected from the group’s membership list and a

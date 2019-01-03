@@ -1,22 +1,25 @@
-package com.github.leaderelection;
+package com.github.leaderelection.messages;
+
+import com.github.leaderelection.Epoch;
+import com.github.leaderelection.Id;
 
 /**
  * This is part of the (HeartbeatRequest:HeartbeatResponse) tuple.
  * 
  * @author gaurav
  */
-public final class HeartbeatResponse implements Response {
+public final class HeartbeatRequest implements Request {
   private Id senderId;
   private Epoch epoch;
-  private ResponseType type = ResponseType.HEARTBEAT;
+  private RequestType type = RequestType.HEARTBEAT;
 
-  public HeartbeatResponse(final Id senderId, final Epoch epoch) {
+  public HeartbeatRequest(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;
     this.epoch = epoch;
   }
 
   @Override
-  public ResponseType getType() {
+  public RequestType getType() {
     return type;
   }
 
@@ -29,9 +32,6 @@ public final class HeartbeatResponse implements Response {
   public Epoch getEpoch() {
     return epoch;
   }
-
-  // for ser-de
-  private HeartbeatResponse() {}
 
   @Override
   public int hashCode() {
@@ -51,10 +51,10 @@ public final class HeartbeatResponse implements Response {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof HeartbeatResponse)) {
+    if (!(obj instanceof HeartbeatRequest)) {
       return false;
     }
-    HeartbeatResponse other = (HeartbeatResponse) obj;
+    HeartbeatRequest other = (HeartbeatRequest) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -73,6 +73,17 @@ public final class HeartbeatResponse implements Response {
       return false;
     }
     return true;
+  }
+
+  // for ser-de
+  private HeartbeatRequest() {}
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("HeartbeatRequest [senderId=").append(senderId).append(", epoch=").append(epoch)
+        .append(", type=").append(type).append("]");
+    return builder.toString();
   }
 
 }
