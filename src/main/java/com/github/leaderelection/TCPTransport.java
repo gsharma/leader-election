@@ -17,12 +17,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.leaderelection.messages.Request;
+import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
+import com.github.leaderelection.messages.SwimFDAckResponse;
+import com.github.leaderelection.messages.SwimFDPingProbe;
 
 /**
  * A simple TCP transport handler - note that this is designed to serve the needs of both a client
@@ -39,6 +43,7 @@ public final class TCPTransport {
   private static final int largeMessageSize = 1024 * 1024; // 1m
 
   private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, SocketChannel> activeClients = new ConcurrentHashMap<>();
 
   // TODO: make part of the metadata query-able by server id
   private static final class ServerMetadata {
@@ -47,7 +52,6 @@ public final class TCPTransport {
     private final int port;
     private final ServerSocketChannel serverChannel;
     private final ServerListener serverListener;
-    private final SocketChannel clientChannel;
 
     private ServerMetadata(final String host, final int port,
         final ServerSocketChannel serverChannel, final ServerListener serverListener)
@@ -56,7 +60,6 @@ public final class TCPTransport {
       this.port = port;
       this.serverChannel = serverChannel;
       this.serverListener = serverListener;
-      clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
     }
   }
 
@@ -99,8 +102,10 @@ public final class TCPTransport {
   }
 
   // TODO
-  public Response dispatch(final Member member, final Request request) {
-    return null;
+  public Response dispatchTo(final Member member, final Request request) throws IOException {
+    final byte[] requestBytes = request.serialize();
+    final byte[] responseBytes = send(member.getHost(), member.getPort(), requestBytes);
+    return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);
   }
 
   /**
@@ -114,11 +119,38 @@ public final class TCPTransport {
     }
     logger.info("Client sending to server {}:{} {}bytes payload", server.host, server.port,
         payload.length);
-    final SocketChannel clientChannel = server.clientChannel;
-    clientChannel.configureBlocking(false);
-    final Socket socket = clientChannel.socket();
-    socket.setTcpNoDelay(true);
 
+    final byte[] serverResponse = send(server.host, server.port, payload);
+
+    // clientChannel.close();
+    logger.info("Client received response from server {}:{} {}bytes", server.host, server.port,
+        serverResponse.length);
+    return serverResponse;
+  }
+
+  private byte[] send(final String host, final int port, final byte[] payload) throws IOException {
+    final SocketChannel clientChannel =
+        activeClients.computeIfAbsent(host + ':' + port, new Function<String, SocketChannel>() {
+          @Override
+          public SocketChannel apply(String key) {
+            SocketChannel clientChannel = null;
+            try {
+              clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
+              clientChannel.configureBlocking(false);
+              final Socket socket = clientChannel.socket();
+              socket.setTcpNoDelay(true);
+            } catch (IOException problem) {
+              logger.error(problem);
+            }
+            return clientChannel;
+          }
+        });
+
+    return send(clientChannel, payload, false);
+  }
+
+  private static byte[] send(final SocketChannel clientChannel, final byte[] payload,
+      boolean closeClient) throws IOException {
     final int bytesWritten = write(clientChannel, payload);
     if (bytesWritten != payload.length) {
       logger.error("Failed to completely write the payload, intended:{}, actual:{}", payload.length,
@@ -126,13 +158,13 @@ public final class TCPTransport {
     }
 
     // wait a tiny while for the server to respond; hmm but this is just dumb
-    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10L));
+    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(500L));
 
     final byte[] serverResponse = read(clientChannel);
 
-    // clientChannel.close();
-    logger.info("Client received response from server {}:{} {}bytes", server.host, server.port,
-        serverResponse.length);
+    if (closeClient) {
+      close(clientChannel);
+    }
     return serverResponse;
   }
 
@@ -183,7 +215,6 @@ public final class TCPTransport {
       logger.error(String.format("No server found for serverId:%s", serverId.toString()));
       return;
     }
-    close(server.clientChannel);
     close(server.serverChannel);
     final Thread listenerThread = server.serverListener;
     listenerThread.interrupt();
@@ -196,12 +227,16 @@ public final class TCPTransport {
       final UUID serverId = serverEntry.getKey();
       stopServer(serverId);
     }
+    for (final SocketChannel clientChannel : activeClients.values()) {
+      close(clientChannel);
+    }
+    activeClients.clear();
   }
 
   /**
    * Close the given client channel.
    */
-  private void close(final SocketChannel clientChannel) throws IOException {
+  private static void close(final SocketChannel clientChannel) throws IOException {
     if (clientChannel != null && clientChannel.isOpen()) {
       logger.info("Closing client socket connected to {}", clientChannel.getRemoteAddress());
       clientChannel.close();
@@ -211,7 +246,7 @@ public final class TCPTransport {
   /**
    * Close the given server channel.
    */
-  private void close(final ServerSocketChannel serverChannel) throws IOException {
+  private static void close(final ServerSocketChannel serverChannel) throws IOException {
     if (serverChannel != null && serverChannel.isOpen()) {
       logger.info("Closing server socket listening on {}", serverChannel.getLocalAddress());
       serverChannel.close();
@@ -234,6 +269,12 @@ public final class TCPTransport {
         setName("acceptor-" + address.getPort());
       } catch (IOException problem) {
       }
+      setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+        @Override
+        public void uncaughtException(Thread thread, Throwable problem) {
+          logger.error(problem);
+        }
+      });
     }
 
     /**
@@ -271,22 +312,53 @@ public final class TCPTransport {
             final Socket socket = clientChannel.socket();
             socket.setTcpNoDelay(true);
 
-            final byte[] payload = read(clientChannel);
+            final byte[] requestPayload = read(clientChannel);
 
-            if (payload.length > 0) {
-              logger.info("Server received from client {} payload:{}",
-                  clientChannel.getRemoteAddress(), new String(payload).trim());
+            if (requestPayload.length > 0) {
+              logger.info("Server received from client {} request:{}bytes",
+                  clientChannel.getRemoteAddress(), requestPayload.length);
+
+              Request request = null;
+              try {
+                request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
+                    SwimFDPingProbe.class);
+              } catch (Exception serdeProblem) {
+                // logger.error(serdeProblem);
+              }
+
+              // TODO: externalize
+              Response response = null;
+              if (request != null) {
+                final RequestType requestType = request.getType();
+                switch (requestType) {
+                  case PING:
+                    response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
+                    logger.info("Received::{}, Responded with::{}", request, response);
+                    break;
+                }
+              }
+
+              byte[] responseBytes = null;
+              if (response != null) {
+                try {
+                  responseBytes = response.serialize();
+                } catch (Exception serdeProblem) {
+                  logger.error(serdeProblem);
+                }
+              }
 
               // TODO
               if (responseHandler != null) {
-                responseHandler.handleResponse(payload);
+                responseHandler.handleResponse(requestPayload);
               }
 
-              // tmp: echoing back to client with tstamp
-              final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
-              logger.info("Server sending to client {} response:{} {}bytes",
-                  clientChannel.getRemoteAddress(), new String(responseBytes),
-                  responseBytes.length);
+              if (responseBytes == null) {
+                // tmp: echoing back to client with tstamp
+                responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
+              }
+
+              logger.info("Server sending to client {} response:{}bytes",
+                  clientChannel.getRemoteAddress(), responseBytes.length);
 
               write(clientChannel, responseBytes);
               buffer.clear();

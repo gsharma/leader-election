@@ -15,7 +15,7 @@ import org.junit.Test;
  */
 public class MemberGroupTest {
   @Test
-  public void testMemberGroup() throws IOException {
+  public void testMemberGroup() throws Exception {
     final MemberGroup group = new MemberGroup(new RandomId());
     final TCPTransport transport = new TCPTransport();
     final String host = "localhost";
@@ -40,6 +40,8 @@ public class MemberGroupTest {
     memberThree.init();
     assertNotNull(memberThree.getServerTransportId());
     assertEquals(Status.ALIVE, memberThree.getStatus());
+
+    Thread.sleep(3_000L);
 
     memberOne.shutdown();
     assertEquals(Status.DEAD, memberOne.getStatus());

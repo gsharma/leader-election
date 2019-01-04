@@ -41,8 +41,8 @@ public final class TCPTransportTest {
     transport.stopServer(serverOne);
     // assertFalse(serverChannelOne.isOpen());
 
-    // try once more, same port
-    final int portTwo = portOne;
+    // try once more
+    final int portTwo = 7000;
     final UUID serverTwo = transport.bindServer(host, portTwo, responseHandler);
     assertNotNull(serverTwo);
     // assertTrue(serverChannelTwo.isOpen());

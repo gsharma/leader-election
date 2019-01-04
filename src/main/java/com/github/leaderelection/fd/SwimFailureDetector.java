@@ -1,5 +1,6 @@
 package com.github.leaderelection.fd;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,9 @@ import com.github.leaderelection.Id;
 import com.github.leaderelection.Member;
 import com.github.leaderelection.MemberGroup;
 import com.github.leaderelection.TCPTransport;
+import com.github.leaderelection.messages.Response;
+import com.github.leaderelection.messages.ResponseType;
+import com.github.leaderelection.messages.SwimFDAckResponse;
 import com.github.leaderelection.messages.SwimFDPingProbe;
 
 /**
@@ -54,12 +58,17 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           // send a ping probe to selected member
           final SwimFDPingProbe pingProbe = new SwimFDPingProbe(sourceMemberId, epoch);
 
-          // TODO
-          // Response response = transport.send(memberToProbe, pingProbe);
-          // AckResponse ackResponse = null;
-          // if (response.getType() == ResponseType.ACK) {
-          // ackResponse = (AckResponse) response;
-          // }
+          Response response = null;
+          try {
+            response = transport.dispatchTo(memberToProbe, pingProbe);
+          } catch (IOException problem) {
+            // TODO: handle timeout
+          }
+
+          SwimFDAckResponse ackResponse = null;
+          if (response != null && response.getType() == ResponseType.ACK) {
+            ackResponse = (SwimFDAckResponse) response;
+          }
         } else {
           logger.info("[{}] Failure detector waiting for other members to join group",
               sourceMemberId);
