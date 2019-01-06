@@ -16,6 +16,7 @@ import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.ResponseType;
 import com.github.leaderelection.messages.SwimFDAckResponse;
 import com.github.leaderelection.messages.SwimFDPingProbe;
+import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
 /**
  * A SWIM-based failure detector implementation.
@@ -68,6 +69,40 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           SwimFDAckResponse ackResponse = null;
           if (response != null && response.getType() == ResponseType.ACK) {
             ackResponse = (SwimFDAckResponse) response;
+          }
+
+          // say we didn't receive the ackResponse and timed out
+          if (ackResponse == null) {
+            final List<Member> proxyMembers = new ArrayList<>(memberGroup.allMembers());
+            proxyMembers.remove(memberToProbe);
+            proxyMembers.remove(sourceMember);
+
+            // broadcast an indirect ping request probe to all (or k) other members to ping
+            // memberToProbe on behalf of the sourceMember
+            final List<Response> proxyResponses = new ArrayList<>(proxyMembers.size());
+            for (final Member proxyMember : proxyMembers) {
+              final SwimFDPingRequestProbe pingRequestProbe =
+                  new SwimFDPingRequestProbe(sourceMemberId, epoch, memberToProbe.getId());
+              Response proxyResponse = null;
+              try {
+                proxyResponse = transport.dispatchTo(proxyMember, pingRequestProbe);
+                if (proxyResponse != null) {
+                  proxyResponses.add(proxyResponse);
+                }
+              } catch (IOException problem) {
+                // TODO: handle timeout
+              }
+            }
+
+            for (final Response proxyResponse : proxyResponses) {
+              SwimFDAckResponse proxyAckResponse = null;
+              if (proxyResponse != null && proxyResponse.getType() == ResponseType.ACK) {
+                proxyAckResponse = (SwimFDAckResponse) proxyResponse;
+                // as soon as any one of the proxying members send back an ack response, the
+                // sourceMember can again mark the memberToProbe as healthy and continue on
+                break;
+              }
+            }
           }
         } else {
           logger.info("[{}] Failure detector waiting for other members to join group",
