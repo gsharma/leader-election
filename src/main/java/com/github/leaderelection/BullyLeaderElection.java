@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.github.leaderelection.fd.FailureDetector;
 import com.github.leaderelection.messages.CoordinatorRequest;
+import com.github.leaderelection.messages.ElectionRequest;
 import com.github.leaderelection.messages.Response;
 
 /**
@@ -52,15 +53,26 @@ public final class BullyLeaderElection implements LeaderElection {
       final CoordinatorRequest victoryMessage = new CoordinatorRequest(sourceMember.getId(), epoch);
 
       for (final Member member : otherMembers(memberGroup, sourceMember)) {
+        logger.info("Announcing leader:{} to {} at {}", leader.getId(), member.getId(), epoch);
         try {
           Response response = transport.dispatchTo(member, victoryMessage);
         } catch (IOException problem) {
         }
       }
     }
-    // broadcast electionMessage to all greaterIdMembers
+    // broadcast election to all greaterIdMembers
     else {
       // TODO
+      final ElectionRequest electionRequest = new ElectionRequest(sourceMember.getId(), epoch);
+
+      for (final Member greaterMember : greaterIdMembers) {
+        logger.info("Member:{} sending election request to {} at {}", sourceMember.getId(),
+            greaterMember.getId(), epoch);
+        try {
+          Response response = transport.dispatchTo(greaterMember, electionRequest);
+        } catch (IOException problem) {
+        }
+      }
     }
 
     logger.info("Elected leader:{} at {}", leader.getId(), epoch);
