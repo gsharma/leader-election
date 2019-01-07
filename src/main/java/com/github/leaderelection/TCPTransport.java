@@ -22,6 +22,7 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.messages.OkResponse;
 import com.github.leaderelection.messages.Request;
 import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
@@ -331,8 +332,18 @@ public final class TCPTransport {
               if (request != null) {
                 final RequestType requestType = request.getType();
                 switch (requestType) {
-                  case PING:
+                  case FD_PING:
                     response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
+                    logger.info("Received::{}, Responded with::{}", request, response);
+                    break;
+                  case FD_PING_REQUEST:
+                    break;
+                  case FD_FAILED:
+                    break;
+                  case ELECTION:
+                    break;
+                  case COORDINATOR:
+                    response = new OkResponse(request.getSenderId(), request.getEpoch());
                     logger.info("Received::{}, Responded with::{}", request, response);
                     break;
                 }

@@ -17,7 +17,7 @@ import com.github.leaderelection.Id;
 public final class SwimFDPingProbe implements Request {
   private Id senderId;
   private Epoch epoch;
-  private RequestType type = RequestType.PING;
+  private RequestType type = RequestType.FD_PING;
 
   public SwimFDPingProbe(final Id senderId, final Epoch epoch) {
     this.senderId = senderId;

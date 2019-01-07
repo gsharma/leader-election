@@ -6,5 +6,5 @@ package com.github.leaderelection;
  * @author gaurav
  */
 public interface LeaderElection {
-
+  Member electLeader();
 }

@@ -34,7 +34,7 @@ public final class Member implements Comparable<Member> {
   // mutables
   private volatile Status status = Status.UNKNOWN;
   private Epoch epoch = new Epoch();
-  private boolean leader;
+  // private boolean leader;
 
   private final MemberGroup memberGroup;
 
@@ -79,10 +79,6 @@ public final class Member implements Comparable<Member> {
   public Response serviceRequest(final Request request) {
     Response response = null;
     return response;
-  }
-
-  public boolean isLeader() {
-    return leader;
   }
 
   public void incrementEpoch() {
@@ -172,8 +168,8 @@ public final class Member implements Comparable<Member> {
     StringBuilder builder = new StringBuilder();
     builder.append("Member [").append(id).append(", host=").append(host).append(", port=")
         .append(port).append(", serverTransportId=").append(serverTransportId).append(", status=")
-        .append(status).append(", epoch=").append(epoch).append(", leader=").append(leader)
-        .append(", groupId=").append(memberGroup.getId()).append("]");
+        .append(status).append(", epoch=").append(epoch).append(", groupId=")
+        .append(memberGroup.getId()).append("]");
     return builder.toString();
   }
 

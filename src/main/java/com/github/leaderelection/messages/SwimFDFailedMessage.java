@@ -14,7 +14,7 @@ public final class SwimFDFailedMessage implements Request {
   private Id senderId;
   private Id failedId;
   private Epoch epoch;
-  private RequestType type = RequestType.FAILED;
+  private RequestType type = RequestType.FD_FAILED;
 
   public SwimFDFailedMessage(final Id senderId, final Epoch epoch, final Id failedId) {
     this.senderId = senderId;

@@ -20,7 +20,7 @@ public final class SwimFDPingRequestProbe implements Request {
   private Id senderId;
   private Id memberToProbe;
   private Epoch epoch;
-  private RequestType type = RequestType.PING_REQUEST;
+  private RequestType type = RequestType.FD_PING_REQUEST;
 
   public SwimFDPingRequestProbe(final Id senderId, final Epoch epoch, final Id memberToProbe) {
     this.senderId = senderId;

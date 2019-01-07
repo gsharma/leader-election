@@ -7,11 +7,11 @@ import static org.junit.Assert.assertNull;
 import org.junit.Test;
 
 /**
- * Tests for sanctity of MemberGroup.
+ * Tests for LeaderElection.
  * 
  * @author gaurav
  */
-public class MemberGroupTest {
+public class LeaderElectionTest {
   @Test
   public void testMemberGroup() throws Exception {
     final MemberGroup group = new MemberGroup(new RandomId());
@@ -40,6 +40,11 @@ public class MemberGroupTest {
     assertEquals(Status.ALIVE, memberThree.getStatus());
 
     Thread.sleep(3_000L);
+
+    final Member bully = group.greatestIdMember();
+    final LeaderElection election = new BullyLeaderElection(group, bully, transport);
+    final Member leader = election.electLeader();
+    assertEquals(bully, leader);
 
     memberOne.shutdown();
     assertEquals(Status.DEAD, memberOne.getStatus());

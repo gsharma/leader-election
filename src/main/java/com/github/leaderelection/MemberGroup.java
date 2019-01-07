@@ -2,6 +2,7 @@ package com.github.leaderelection;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -64,6 +65,16 @@ public final class MemberGroup {
       }
     }
     return smallerMembers;
+  }
+
+  public Member greatestIdMember() {
+    Collections.sort(members, new Comparator<Member>() {
+      @Override
+      public int compare(Member one, Member two) {
+        return one.compareTo(two);
+      }
+    });
+    return members.get(members.size() - 1);
   }
 
   @Override
