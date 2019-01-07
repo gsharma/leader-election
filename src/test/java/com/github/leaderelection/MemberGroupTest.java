@@ -14,41 +14,43 @@ import org.junit.Test;
 public class MemberGroupTest {
   @Test
   public void testMemberGroup() throws Exception {
-    final MemberGroup group = new MemberGroup(new RandomId());
     final TCPTransport transport = new TCPTransport();
-    final String host = "localhost";
+    try {
+      final MemberGroup group = new MemberGroup(new RandomId());
+      final String host = "localhost";
 
-    final int portOne = 4005;
-    final Member memberOne = new Member(transport, new RandomId(), host, portOne, group);
-    assertNull(memberOne.getServerTransportId());
-    memberOne.init();
-    assertNotNull(memberOne.getServerTransportId());
-    assertEquals(Status.ALIVE, memberOne.getStatus());
+      final int portOne = 4005;
+      final Member memberOne = new Member(transport, new RandomId(), host, portOne, group);
+      assertNull(memberOne.getServerTransportId());
+      memberOne.init();
+      assertNotNull(memberOne.getServerTransportId());
+      assertEquals(Status.ALIVE, memberOne.getStatus());
 
-    final int portTwo = 4004;
-    final Member memberTwo = new Member(transport, new RandomId(), host, portTwo, group);
-    assertNull(memberTwo.getServerTransportId());
-    memberTwo.init();
-    assertNotNull(memberTwo.getServerTransportId());
-    assertEquals(Status.ALIVE, memberTwo.getStatus());
+      final int portTwo = 4004;
+      final Member memberTwo = new Member(transport, new RandomId(), host, portTwo, group);
+      assertNull(memberTwo.getServerTransportId());
+      memberTwo.init();
+      assertNotNull(memberTwo.getServerTransportId());
+      assertEquals(Status.ALIVE, memberTwo.getStatus());
 
-    final int portThree = 4003;
-    final Member memberThree = new Member(transport, new RandomId(), host, portThree, group);
-    assertNull(memberThree.getServerTransportId());
-    memberThree.init();
-    assertNotNull(memberThree.getServerTransportId());
-    assertEquals(Status.ALIVE, memberThree.getStatus());
+      final int portThree = 4003;
+      final Member memberThree = new Member(transport, new RandomId(), host, portThree, group);
+      assertNull(memberThree.getServerTransportId());
+      memberThree.init();
+      assertNotNull(memberThree.getServerTransportId());
+      assertEquals(Status.ALIVE, memberThree.getStatus());
 
-    Thread.sleep(3_000L);
+      Thread.sleep(3_000L);
 
-    memberOne.shutdown();
-    assertEquals(Status.DEAD, memberOne.getStatus());
-    memberTwo.shutdown();
-    assertEquals(Status.DEAD, memberTwo.getStatus());
-    memberThree.shutdown();
-    assertEquals(Status.DEAD, memberThree.getStatus());
-
-    transport.shutdown();
+      memberOne.shutdown();
+      assertEquals(Status.DEAD, memberOne.getStatus());
+      memberTwo.shutdown();
+      assertEquals(Status.DEAD, memberTwo.getStatus());
+      memberThree.shutdown();
+      assertEquals(Status.DEAD, memberThree.getStatus());
+    } finally {
+      transport.shutdown();
+    }
   }
 
 }
