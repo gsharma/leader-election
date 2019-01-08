@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.github.leaderelection.Id;
 import com.github.leaderelection.Member;
 import com.github.leaderelection.MemberGroup;
-import com.github.leaderelection.TCPTransport;
+import com.github.leaderelection.MemberTransport;
 import com.github.leaderelection.messages.HeartbeatRequest;
 
 /**
@@ -20,7 +20,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
   private static final Logger logger =
       LogManager.getLogger(HeartbeatFailureDetector.class.getSimpleName());
 
-  private final TCPTransport transport;
+  private final MemberTransport transport;
   private final MemberGroup memberGroup;
   private final Id sourceMemberId;
 
@@ -28,7 +28,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
 
   private int retryThreshold = 5;
 
-  public HeartbeatFailureDetector(final TCPTransport transport, final MemberGroup memberGroup,
+  public HeartbeatFailureDetector(final MemberTransport transport, final MemberGroup memberGroup,
       final Id sourceMemberId) {
     setName("failure-detector");
     setDaemon(true);

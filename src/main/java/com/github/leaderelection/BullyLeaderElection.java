@@ -23,14 +23,14 @@ public final class BullyLeaderElection implements LeaderElection {
 
   private final MemberGroup memberGroup;
   // private final FailureDetector failureDetector;
-  private final TCPTransport transport;
+  private final MemberTransport transport;
 
   private final Member sourceMember;
 
   private Epoch epoch = new Epoch();
 
   public BullyLeaderElection(final MemberGroup memberGroup, final Member sourceMember,
-      final TCPTransport transport) {
+      final MemberTransport transport) {
     this.memberGroup = memberGroup;
     this.sourceMember = sourceMember;
     this.transport = transport;

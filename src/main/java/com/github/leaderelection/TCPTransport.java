@@ -35,7 +35,7 @@ import com.github.leaderelection.messages.SwimFDPingProbe;
  * 
  * @author gaurav
  */
-public final class TCPTransport {
+final class TCPTransport {
   private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
 
   private static final int xsmallMessageSize = 512; // 0.5k
@@ -45,6 +45,8 @@ public final class TCPTransport {
 
   private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, SocketChannel> activeClients = new ConcurrentHashMap<>();
+
+  private static final TCPTransport instance = new TCPTransport();
 
   // TODO: make part of the metadata query-able by server id
   private static final class ServerMetadata {
@@ -64,10 +66,14 @@ public final class TCPTransport {
     }
   }
 
+  static TCPTransport getInstance() {
+    return instance;
+  }
+
   /**
    * Bind and create a server socket listening on the given host,port.
    */
-  public UUID bindServer(final String host, final int port, final ResponseHandler responseHandler)
+  UUID bindServer(final String host, final int port, final ServiceHandler serviceHandler)
       throws IOException {
     logger.info("Preparing server to listen on {}:{}", host, port);
     for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
@@ -92,7 +98,7 @@ public final class TCPTransport {
     serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
     final ServerListener serverListener =
-        new ServerListener(serverChannel, selector, responseHandler);
+        new ServerListener(serverChannel, selector, serviceHandler);
     serverListener.start();
 
     final ServerMetadata server = new ServerMetadata(host, port, serverChannel, serverListener);
@@ -102,17 +108,10 @@ public final class TCPTransport {
     return serverId;
   }
 
-  // TODO
-  public Response dispatchTo(final Member member, final Request request) throws IOException {
-    final byte[] requestBytes = request.serialize();
-    final byte[] responseBytes = send(member.getHost(), member.getPort(), requestBytes);
-    return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);
-  }
-
   /**
    * Send a payload to the server and receive a response from it.
    */
-  public byte[] send(final UUID serverId, final byte[] payload) throws IOException {
+  byte[] send(final UUID serverId, final byte[] payload) throws IOException {
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
       throw new UnsupportedOperationException(
@@ -129,7 +128,7 @@ public final class TCPTransport {
     return serverResponse;
   }
 
-  private byte[] send(final String host, final int port, final byte[] payload) throws IOException {
+  byte[] send(final String host, final int port, final byte[] payload) throws IOException {
     final SocketChannel clientChannel =
         activeClients.computeIfAbsent(host + ':' + port, new Function<String, SocketChannel>() {
           @Override
@@ -210,7 +209,7 @@ public final class TCPTransport {
   /**
    * Close the server socket for the given serverId.
    */
-  public void stopServer(final UUID serverId) throws IOException {
+  void stopServer(final UUID serverId) throws IOException {
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
       logger.error(String.format("No server found for serverId:%s", serverId.toString()));
@@ -222,7 +221,7 @@ public final class TCPTransport {
     activeServers.remove(serverId);
   }
 
-  public void shutdown() throws IOException {
+  void shutdown() throws IOException {
     logger.info("Shutting down transport layer");
     for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
       final UUID serverId = serverEntry.getKey();
@@ -257,14 +256,14 @@ public final class TCPTransport {
   private final static class ServerListener extends Thread {
     private final ServerSocketChannel serverChannel;
     private final Selector selector;
-    private final ResponseHandler responseHandler;
+    private final ServiceHandler serviceHandler;
 
     private ServerListener(final ServerSocketChannel serverChannel, final Selector selector,
-        final ResponseHandler responseHandler) {
+        final ServiceHandler serviceHandler) {
       setDaemon(true);
       this.serverChannel = serverChannel;
       this.selector = selector;
-      this.responseHandler = responseHandler;
+      this.serviceHandler = serviceHandler;
       try {
         final InetSocketAddress address = (InetSocketAddress) serverChannel.getLocalAddress();
         setName("acceptor-" + address.getPort());
@@ -319,6 +318,7 @@ public final class TCPTransport {
               logger.info("Server received from client {} request:{}bytes",
                   clientChannel.getRemoteAddress(), requestPayload.length);
 
+              // TODO: externalize to use serviceHandler.service(requestPayload)
               Request request = null;
               try {
                 request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
@@ -327,7 +327,6 @@ public final class TCPTransport {
                 // logger.error(serdeProblem);
               }
 
-              // TODO: externalize
               Response response = null;
               if (request != null) {
                 final RequestType requestType = request.getType();
@@ -359,8 +358,8 @@ public final class TCPTransport {
               }
 
               // TODO
-              if (responseHandler != null) {
-                responseHandler.handleResponse(requestPayload);
+              if (serviceHandler != null) {
+                byte[] responsePayload = serviceHandler.service(requestPayload);
               }
 
               if (responseBytes == null) {
@@ -399,8 +398,6 @@ public final class TCPTransport {
             if (payload.length > 0) {
               logger.info("Server received from client {} payload:{}",
                   clientChannel.getRemoteAddress(), new String(payload).trim());
-              // TODO
-              responseHandler.handleResponse(payload);
 
               // tmp: echoing back to client with tstamp
               final byte[] responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
@@ -431,5 +428,8 @@ public final class TCPTransport {
       }
     }
   }
+
+  // prevent instance escape
+  private TCPTransport() {}
 
 }

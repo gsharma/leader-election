@@ -12,11 +12,13 @@ import org.junit.Test;
  * @author gaurav
  */
 public class MemberGroupTest {
+
   @Test
   public void testMemberGroup() throws Exception {
-    final TCPTransport transport = new TCPTransport();
+    final MemberGroup group = new MemberGroup(new RandomId());
+    final MemberTransport transport = new MemberTransport(TCPTransport.getInstance(), group);
+
     try {
-      final MemberGroup group = new MemberGroup(new RandomId());
       final String host = "localhost";
 
       final int portOne = 4005;

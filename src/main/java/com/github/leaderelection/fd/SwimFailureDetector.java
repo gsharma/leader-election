@@ -11,7 +11,7 @@ import com.github.leaderelection.Epoch;
 import com.github.leaderelection.Id;
 import com.github.leaderelection.Member;
 import com.github.leaderelection.MemberGroup;
-import com.github.leaderelection.TCPTransport;
+import com.github.leaderelection.MemberTransport;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.ResponseType;
 import com.github.leaderelection.messages.SwimFDAckResponse;
@@ -27,7 +27,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   private static final Logger logger =
       LogManager.getLogger(SwimFailureDetector.class.getSimpleName());
 
-  private final TCPTransport transport;
+  private final MemberTransport transport;
   private final MemberGroup memberGroup;
   private final Id sourceMemberId;
   private final Member sourceMember;
@@ -37,7 +37,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   // the protocol period needs to be at least 3x the RTT estimate
   private long protocolIntervalMillis = 9_000L;
 
-  public SwimFailureDetector(final TCPTransport transport, final MemberGroup memberGroup,
+  public SwimFailureDetector(final MemberTransport transport, final MemberGroup memberGroup,
       final Id sourceMemberId) {
     setName("failure-detector");
     setDaemon(true);

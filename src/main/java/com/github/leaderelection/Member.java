@@ -26,7 +26,7 @@ public final class Member implements Comparable<Member> {
   private final Id id;
   private final String host;
   private final int port;
-  private final TCPTransport transport;
+  private final MemberTransport transport;
   private UUID serverTransportId;
 
   private SwimFailureDetector failureDetector;
@@ -38,7 +38,7 @@ public final class Member implements Comparable<Member> {
 
   private final MemberGroup memberGroup;
 
-  public Member(final TCPTransport transport, final Id id, final String host, final int port,
+  public Member(final MemberTransport transport, final Id id, final String host, final int port,
       final MemberGroup memberGroup) throws IOException {
     this.id = id;
     this.host = host;
@@ -52,7 +52,7 @@ public final class Member implements Comparable<Member> {
   public synchronized void init() throws IOException {
     logger.info("Initializing member:{}", id);
     if (status != Status.ALIVE) {
-      serverTransportId = transport.bindServer(host, port, null);
+      serverTransportId = transport.bindServer(host, port);
       memberGroup.addMember(this);
       failureDetector = new SwimFailureDetector(transport, memberGroup, id);
       failureDetector.init();

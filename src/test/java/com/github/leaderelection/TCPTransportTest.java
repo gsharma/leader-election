@@ -22,15 +22,15 @@ public final class TCPTransportTest {
   public void testServerLifecycle() throws IOException {
     final String host = "localhost";
     int portOne = 6000;
-    final ResponseHandler responseHandler =
+    final ServiceHandler serviceHandler =
         null;/*
               * new ResponseHandler() {
               * 
               * @Override public void handleResponse(byte[] response) { // TODO } };
               */
-    final TCPTransport transport = new TCPTransport();
+    final TCPTransport transport = TCPTransport.getInstance();
     try {
-      final UUID serverOne = transport.bindServer(host, portOne, responseHandler);
+      final UUID serverOne = transport.bindServer(host, portOne, serviceHandler);
       assertNotNull(serverOne);
       // assertTrue(serverChannelOne.isOpen());
       // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
@@ -44,13 +44,13 @@ public final class TCPTransportTest {
 
       // try once more
       final int portTwo = 7000;
-      final UUID serverTwo = transport.bindServer(host, portTwo, responseHandler);
+      final UUID serverTwo = transport.bindServer(host, portTwo, serviceHandler);
       assertNotNull(serverTwo);
       // assertTrue(serverChannelTwo.isOpen());
 
       // try binding to a different port
       final int portThree = 8999;
-      final UUID serverThree = transport.bindServer(host, portThree, responseHandler);
+      final UUID serverThree = transport.bindServer(host, portThree, serviceHandler);
       assertNotNull(serverThree);
       // assertTrue(serverChannelThree.isOpen());
 
