@@ -16,8 +16,9 @@ public final class MemberTransport {
   private final MemberGroup memberGroup;
   private final TCPTransport tcpTransport;
 
-  public MemberTransport(final TCPTransport tcpTransport, final MemberGroup memberGroup) {
-    this.tcpTransport = tcpTransport;
+  public MemberTransport(final MemberGroup memberGroup) {
+    this.tcpTransport = TCPTransport.getInstance();
+    this.tcpTransport.start();
     this.memberGroup = memberGroup;
     // this.sourceMember = sourceMember;
   }
@@ -39,6 +40,10 @@ public final class MemberTransport {
 
   public void shutdown() throws IOException {
     tcpTransport.shutdown();
+  }
+
+  public boolean isRunning() {
+    return tcpTransport.isRunning();
   }
 
 }

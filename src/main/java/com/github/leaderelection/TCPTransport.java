@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
 
@@ -47,6 +48,8 @@ final class TCPTransport {
   private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, SocketChannel> activeClients = new ConcurrentHashMap<>();
 
+  private final AtomicBoolean running = new AtomicBoolean();
+
   private static final TCPTransport instance = new TCPTransport();
 
   // TODO: make part of the metadata query-able by server id
@@ -76,6 +79,10 @@ final class TCPTransport {
    */
   UUID bindServer(final String host, final int port, final ServiceHandler serviceHandler)
       throws IOException {
+    if (!running.get()) {
+      throw new IllegalStateException(
+          "Cannot bind to a server socket via a shutdown tcp transport layer");
+    }
     logger.info("Preparing server to listen on {}:{}", host, port);
     for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
       final ServerMetadata activeServer = serverEntry.getValue();
@@ -113,6 +120,9 @@ final class TCPTransport {
    * Send a payload to the server and receive a response from it.
    */
   byte[] send(final UUID serverId, final byte[] payload) throws IOException {
+    if (!running.get()) {
+      throw new IllegalStateException("Cannot send via a shutdown tcp transport layer");
+    }
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
       throw new UnsupportedOperationException(
@@ -130,6 +140,9 @@ final class TCPTransport {
   }
 
   byte[] send(final String host, final int port, final byte[] payload) throws IOException {
+    if (!running.get()) {
+      throw new IllegalStateException("Cannot send via a shutdown tcp transport layer");
+    }
     final SocketChannel clientChannel =
         activeClients.computeIfAbsent(host + ':' + port, new Function<String, SocketChannel>() {
           @Override
@@ -148,6 +161,10 @@ final class TCPTransport {
         });
 
     return send(clientChannel, payload, false);
+  }
+
+  boolean isRunning() {
+    return running.get();
   }
 
   private static byte[] send(final SocketChannel clientChannel, final byte[] payload,
@@ -211,6 +228,9 @@ final class TCPTransport {
    * Close the server socket for the given serverId.
    */
   void stopServer(final UUID serverId) throws IOException {
+    if (!running.get()) {
+      return;
+    }
     final ServerMetadata server = activeServers.get(serverId);
     if (server == null) {
       logger.error(String.format("No server found for serverId:%s", serverId.toString()));
@@ -222,16 +242,22 @@ final class TCPTransport {
     activeServers.remove(serverId);
   }
 
+  void start() {
+    running.compareAndSet(false, true);
+  }
+
   void shutdown() throws IOException {
-    logger.info("Shutting down transport layer");
-    for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
-      final UUID serverId = serverEntry.getKey();
-      stopServer(serverId);
+    if (running.compareAndSet(true, false)) {
+      logger.info("Shutting down transport layer");
+      for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
+        final UUID serverId = serverEntry.getKey();
+        stopServer(serverId);
+      }
+      for (final SocketChannel clientChannel : activeClients.values()) {
+        close(clientChannel);
+      }
+      activeClients.clear();
     }
-    for (final SocketChannel clientChannel : activeClients.values()) {
-      close(clientChannel);
-    }
-    activeClients.clear();
   }
 
   /**
@@ -420,7 +446,7 @@ final class TCPTransport {
               buffer.clear();
             }
           }
-
+          // pull off the selector key
           iterator.remove();
         }
       }

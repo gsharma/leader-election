@@ -1,6 +1,7 @@
 package com.github.leaderelection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -16,7 +17,7 @@ public class LeaderElectionTest {
   @Test
   public void testMemberGroup() throws Exception {
     final MemberGroup group = new MemberGroup(new RandomId());
-    final MemberTransport transport = new MemberTransport(TCPTransport.getInstance(), group);
+    final MemberTransport transport = new MemberTransport(group);
 
     try {
       final String host = "localhost";
@@ -57,6 +58,7 @@ public class LeaderElectionTest {
       assertEquals(Status.DEAD, memberThree.getStatus());
     } finally {
       transport.shutdown();
+      assertFalse(transport.isRunning());
     }
   }
 

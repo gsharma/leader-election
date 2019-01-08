@@ -1,5 +1,6 @@
 package com.github.leaderelection;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -29,6 +30,7 @@ public final class TCPTransportTest {
               * @Override public void handleResponse(byte[] response) { // TODO } };
               */
     final TCPTransport transport = TCPTransport.getInstance();
+    transport.start();
     try {
       final UUID serverOne = transport.bindServer(host, portOne, serviceHandler);
       assertNotNull(serverOne);
@@ -74,6 +76,7 @@ public final class TCPTransportTest {
       // assertFalse(serverChannelThree.isOpen());
     } finally {
       transport.shutdown();
+      assertFalse(transport.isRunning());
     }
   }
 
