@@ -1,7 +1,9 @@
 package com.github.leaderelection.messages;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github.leaderelection.Epoch;
 import com.github.leaderelection.Id;
+import com.github.leaderelection.RandomId;
 
 /**
  * During each protocol period, a random member is selected from the group’s membership list and a
@@ -38,6 +40,7 @@ public final class SwimFDPingRequestProbe implements Request {
     return senderId;
   }
 
+  @JsonDeserialize(as = RandomId.class)
   public Id getMemberToProbe() {
     return memberToProbe;
   }

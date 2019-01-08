@@ -32,18 +32,19 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   private final Id sourceMemberId;
   private final Member sourceMember;
 
-  private Epoch epoch;
+  private final Epoch epoch;
 
   // the protocol period needs to be at least 3x the RTT estimate
   private long protocolIntervalMillis = 9_000L;
 
   public SwimFailureDetector(final MemberTransport transport, final MemberGroup memberGroup,
-      final Id sourceMemberId) {
+      final Id sourceMemberId, final Epoch epoch) {
     setName("failure-detector");
     setDaemon(true);
     this.transport = transport;
     this.memberGroup = memberGroup;
     this.sourceMemberId = sourceMemberId;
+    this.epoch = epoch;
     this.sourceMember = memberGroup.findMember(sourceMemberId);
   }
 

@@ -54,7 +54,7 @@ public final class Member implements Comparable<Member> {
     if (status != Status.ALIVE) {
       serverTransportId = transport.bindServer(host, port);
       memberGroup.addMember(this);
-      failureDetector = new SwimFailureDetector(transport, memberGroup, id);
+      failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
       failureDetector.init();
       status = Status.ALIVE;
     } else {

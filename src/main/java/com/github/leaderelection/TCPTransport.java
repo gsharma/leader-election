@@ -28,6 +28,7 @@ import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.SwimFDAckResponse;
 import com.github.leaderelection.messages.SwimFDPingProbe;
+import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
 /**
  * A simple TCP transport handler - note that this is designed to serve the needs of both a client
@@ -318,13 +319,21 @@ final class TCPTransport {
               logger.info("Server received from client {} request:{}bytes",
                   clientChannel.getRemoteAddress(), requestPayload.length);
 
-              // TODO: externalize to use serviceHandler.service(requestPayload)
+              // TODO:
+              // 1. externalize to use serviceHandler.service(requestPayload)
+              // 2. ensure deserialization happens correctly
               Request request = null;
               try {
                 request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
                     SwimFDPingProbe.class);
-              } catch (Exception serdeProblem) {
-                // logger.error(serdeProblem);
+              } catch (Exception serdeProblem1) {
+                // logger.error(serdeProblem1);
+                try {
+                  request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
+                      SwimFDPingRequestProbe.class);
+                } catch (Exception serdeProblem2) {
+                  logger.error(serdeProblem2);
+                }
               }
 
               Response response = null;
@@ -336,6 +345,8 @@ final class TCPTransport {
                     logger.info("Received::{}, Responded with::{}", request, response);
                     break;
                   case FD_PING_REQUEST:
+                    response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
+                    logger.info("Received::{}, Responded with::{}", request, response);
                     break;
                   case FD_FAILED:
                     break;
