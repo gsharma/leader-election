@@ -2,6 +2,8 @@ package com.github.leaderelection;
 
 import static org.junit.Assert.*;
 
+import java.io.Serializable;
+
 import org.junit.Test;
 
 import com.github.leaderelection.messages.CoordinatorRequest;
@@ -19,7 +21,7 @@ import com.github.leaderelection.messages.Response;
  */
 public final class SerdeTest {
 
-  @Test
+  /*@Test
   public void testRequestSerDe() {
     Request request = new HeartbeatRequest(new RandomId(), new Epoch());
     byte[] serializedRequest = request.serialize();
@@ -58,6 +60,65 @@ public final class SerdeTest {
     deserializedResponse =
         new OkResponse(new RandomId(), new Epoch()).deserialize(serializedResponse);
     assertEquals(response, deserializedResponse);
+  }*/
+
+  @Test
+  public void testSerDe() {
+    SerdeMock mock = new SerdeMock();
+    mock.f = 9.0f;
+    mock.i = 8;
+    mock.s = "s";
+    byte[] flattened = InternalLib.serialize(mock);
+    Object deserialized = InternalLib.deserialize(flattened);
+    assertEquals(mock, deserialized);
   }
 
+  public static class SerdeMock implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String s;
+    private Integer i;
+    private float f;
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + Float.floatToIntBits(f);
+      result = prime * result + ((i == null) ? 0 : i.hashCode());
+      result = prime * result + ((s == null) ? 0 : s.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null) {
+        return false;
+      }
+      if (!(obj instanceof SerdeMock)) {
+        return false;
+      }
+      SerdeMock other = (SerdeMock) obj;
+      if (Float.floatToIntBits(f) != Float.floatToIntBits(other.f)) {
+        return false;
+      }
+      if (i == null) {
+        if (other.i != null) {
+          return false;
+        }
+      } else if (!i.equals(other.i)) {
+        return false;
+      }
+      if (s == null) {
+        if (other.s != null) {
+          return false;
+        }
+      } else if (!s.equals(other.s)) {
+        return false;
+      }
+      return true;
+    }
+  }
 }

@@ -28,10 +28,18 @@ public final class MemberTransport {
   }
 
   public Response dispatchTo(final Member member, final Request request) throws IOException {
-    final byte[] requestBytes = request.serialize();
-    final byte[] responseBytes =
-        tcpTransport.send(member.getHost(), member.getPort(), requestBytes);
-    return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);
+    Response response = null;
+    if (isRunning()) {
+      final byte[] requestBytes = InternalLib.serialize(request);
+      // final byte[] requestBytes = request.serialize();
+      final byte[] responseBytes =
+          tcpTransport.send(member.getHost(), member.getPort(), requestBytes);
+      if (responseBytes != null && responseBytes.length != 0) {
+        response = Response.class.cast(InternalLib.deserialize(responseBytes));
+        // return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);
+      }
+    }
+    return response;
   }
 
   public void stopServer(final UUID serverId) throws IOException {

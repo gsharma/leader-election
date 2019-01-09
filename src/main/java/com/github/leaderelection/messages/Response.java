@@ -1,28 +1,27 @@
 package com.github.leaderelection.messages;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.Serializable;
+
 import com.github.leaderelection.Epoch;
 import com.github.leaderelection.Id;
-import com.github.leaderelection.InternalLib;
-import com.github.leaderelection.RandomId;
 
 /**
  * A response skeleton.
  * 
  * @author gaurav
  */
-public interface Response {
+public interface Response extends Serializable {
 
   ResponseType getType();
 
-  @JsonDeserialize(as = RandomId.class)
+  // @JsonDeserialize(as = RandomId.class)
   Id getSenderId();
 
   Epoch getEpoch();
 
   // Deserialize and reconstruct the response object. Ideally, this should be a static
   // function not requiring the call to default response implementation constructor.
-  public default Response deserialize(byte[] flattenedResponse) {
+  /*public default Response deserialize(byte[] flattenedResponse) {
     Response deserializedResponse = null;
     try {
       deserializedResponse = InternalLib.getObjectMapper().readValue(flattenedResponse, getClass());
@@ -43,6 +42,6 @@ public interface Response {
       // serDeProblem);
     }
     return serialized;
-  }
+  }*/
 
 }

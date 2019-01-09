@@ -6,16 +6,10 @@ package com.github.leaderelection.messages;
  * @author gaurav
  */
 public enum RequestType {
-  HEARTBEAT(1),
+  HEARTBEAT,
   // election-related requests
-  ELECTION(11), COORDINATOR(12),
+  ELECTION, COORDINATOR,
   // failure-detection requests
-  FD_PING(21), FD_PING_REQUEST(22), FD_FAILED(23);
-
-  private int ordinal;
-
-  private RequestType(int ordinal) {
-    this.ordinal = ordinal;
-  }
+  FD_PING, FD_PING_REQUEST, FD_FAILED;
 
 }

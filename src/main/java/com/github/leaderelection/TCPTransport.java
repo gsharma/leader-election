@@ -40,7 +40,7 @@ import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 final class TCPTransport {
   private static final Logger logger = LogManager.getLogger(TCPTransport.class.getSimpleName());
 
-  private static final int xsmallMessageSize = 512; // 0.5k
+  private static final int xsmallMessageSize = 1024; // 1k
   private static final int smallMessageSize = 4 * 1024; // 4k
   private static final int mediumMessageSize = 128 * 1024; // 128k
   private static final int largeMessageSize = 1024 * 1024; // 1m
@@ -350,6 +350,12 @@ final class TCPTransport {
               // 2. ensure deserialization happens correctly
               Request request = null;
               try {
+                request = (Request) InternalLib.deserialize(requestPayload);
+              } catch (Exception serdeProblem) {
+                logger.error(serdeProblem);
+              }
+
+              /*try {
                 request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
                     SwimFDPingProbe.class);
               } catch (Exception serdeProblem1) {
@@ -360,7 +366,7 @@ final class TCPTransport {
                 } catch (Exception serdeProblem2) {
                   logger.error(serdeProblem2);
                 }
-              }
+              }*/
 
               Response response = null;
               if (request != null) {
@@ -377,6 +383,9 @@ final class TCPTransport {
                   case FD_FAILED:
                     break;
                   case ELECTION:
+                    // TODO: forward to relevant members
+                    response = new OkResponse(request.getSenderId(), request.getEpoch());
+                    logger.info("Received::{}, Responded with::{}", request, response);
                     break;
                   case COORDINATOR:
                     response = new OkResponse(request.getSenderId(), request.getEpoch());
@@ -388,7 +397,7 @@ final class TCPTransport {
               byte[] responseBytes = null;
               if (response != null) {
                 try {
-                  responseBytes = response.serialize();
+                  responseBytes = InternalLib.serialize(response);
                 } catch (Exception serdeProblem) {
                   logger.error(serdeProblem);
                 }
@@ -399,11 +408,6 @@ final class TCPTransport {
                 byte[] responsePayload = serviceHandler.service(requestPayload);
               }
 
-              if (responseBytes == null) {
-                // tmp: echoing back to client with tstamp
-                responseBytes = Long.toString(System.currentTimeMillis()).getBytes();
-              }
-
               logger.info("Server sending to client {} response:{}bytes",
                   clientChannel.getRemoteAddress(), responseBytes.length);
 
@@ -412,7 +416,7 @@ final class TCPTransport {
             }
           }
 
-          // write
+          // write - no-op path - remove this
           else if (key.isValid() && key.isWritable()) {
             logger.info("Key is writable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();

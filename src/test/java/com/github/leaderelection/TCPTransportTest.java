@@ -11,6 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
+import com.github.leaderelection.messages.Request;
+import com.github.leaderelection.messages.SwimFDPingProbe;
+
 /**
  * Tests for TCPTransport.
  * 
@@ -36,11 +39,11 @@ public final class TCPTransportTest {
       assertNotNull(serverOne);
       // assertTrue(serverChannelOne.isOpen());
       // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
-      final String payloadOne = "one";
-      byte[] response = transport.send(serverOne, payloadOne.getBytes());
+      final Request payloadOne = new SwimFDPingProbe(new RandomId(), new Epoch());
+      byte[] response = transport.send(serverOne, InternalLib.serialize(payloadOne));
       assertTrue(response.length > 0);
       logger.info("Client received from server {}:{} responseOne:{}, {}bytes", host, portOne,
-          new String(response), response.length);
+          InternalLib.deserialize(response), response.length);
       transport.stopServer(serverOne);
       // assertFalse(serverChannelOne.isOpen());
 
@@ -58,15 +61,17 @@ public final class TCPTransportTest {
 
       // push payloads to both servers
       for (int iter = 0; iter < 2; iter++) {
-        response = transport.send(serverTwo, "two".getBytes());
+        response = transport.send(serverTwo,
+            InternalLib.serialize(new SwimFDPingProbe(new RandomId(), new Epoch())));
         assertTrue(response.length > 0);
         logger.info("Client received from server {}:{} responseTwo:{}, {}bytes", host, portTwo,
-            new String(response), response.length);
+            InternalLib.deserialize(response), response.length);
 
-        response = transport.send(serverThree, "three".getBytes());
+        response = transport.send(serverThree,
+            InternalLib.serialize(new SwimFDPingProbe(new RandomId(), new Epoch())));
         assertTrue(response.length > 0);
         logger.info("Client received from server {}:{} responseThree:{}, {}bytes", host, portThree,
-            new String(response), response.length);
+            InternalLib.deserialize(response), response.length);
       }
 
       // close both servers

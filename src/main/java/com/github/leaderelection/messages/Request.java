@@ -1,28 +1,27 @@
 package com.github.leaderelection.messages;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.Serializable;
+
 import com.github.leaderelection.Epoch;
 import com.github.leaderelection.Id;
-import com.github.leaderelection.InternalLib;
-import com.github.leaderelection.RandomId;
 
 /**
  * A request skeleton.
  * 
  * @author gaurav
  */
-public interface Request {
+public interface Request extends Serializable {
 
   RequestType getType();
 
-  @JsonDeserialize(as = RandomId.class)
+  // @JsonDeserialize(as = RandomId.class)
   Id getSenderId();
 
   Epoch getEpoch();
 
   // Deserialize and reconstruct the request object. Ideally, this should be a static
   // function not requiring the call to default request implementation constructor.
-  public default Request deserialize(byte[] flattenedRequest) {
+  /*public default Request deserialize(byte[] flattenedRequest) {
     Request deserializedRequest = null;
     try {
       deserializedRequest = InternalLib.getObjectMapper().readValue(flattenedRequest, getClass());
@@ -43,6 +42,6 @@ public interface Request {
       // serDeProblem);
     }
     return serialized;
-  }
+  }*/
 
 }

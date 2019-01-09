@@ -19,6 +19,8 @@ import com.github.leaderelection.RandomId;
  * @author gaurav
  */
 public final class SwimFDPingRequestProbe implements Request {
+  private static final long serialVersionUID = 1L;
+
   private Id senderId;
   private Id memberToProbe;
   private Epoch epoch;

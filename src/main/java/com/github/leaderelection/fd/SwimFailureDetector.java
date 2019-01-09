@@ -65,6 +65,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
             response = transport.dispatchTo(memberToProbe, pingProbe);
           } catch (IOException problem) {
             // TODO: handle timeout
+          } catch (Exception problem) {
+            // might have shutdown
           }
 
           SwimFDAckResponse ackResponse = null;
@@ -73,7 +75,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           }
 
           // say we didn't receive the ackResponse and timed out
-          if (ackResponse == null) {
+          if (ackResponse == null && transport.isRunning()) {
             final List<Member> proxyMembers = new ArrayList<>(memberGroup.allMembers());
             proxyMembers.remove(memberToProbe);
             proxyMembers.remove(sourceMember);
@@ -152,6 +154,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
     // TODO
     logger.info("[{}] Stopping failure detector for {}", sourceMemberId, sourceMember);
     interrupt();
+    logger.info("[{}] Stopped failure detector for {}", sourceMemberId, sourceMember);
     return true;
   }
 

@@ -11,6 +11,8 @@ import com.github.leaderelection.Id;
  * @author gaurav
  */
 public final class SwimFDAckResponse implements Response {
+  private static final long serialVersionUID = 1L;
+
   private Id senderId;
   // The mediatorId is optionally set only as an ack response to the delegated FDPingRequestProbe
   // message

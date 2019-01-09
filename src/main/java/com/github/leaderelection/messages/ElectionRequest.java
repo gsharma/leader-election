@@ -9,6 +9,8 @@ import com.github.leaderelection.Id;
  * @author gaurav
  */
 public final class ElectionRequest implements Request {
+  private static final long serialVersionUID = 1L;
+
   private Id senderId;
   private Epoch epoch;
   private final RequestType type = RequestType.ELECTION;

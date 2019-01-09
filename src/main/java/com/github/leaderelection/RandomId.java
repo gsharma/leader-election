@@ -8,6 +8,8 @@ import java.util.UUID;
  * @author gaurav
  */
 public final class RandomId implements Id {
+  private static final long serialVersionUID = 1L;
+
   private final UUID id = UUID.randomUUID();
 
   @Override

@@ -11,6 +11,8 @@ import com.github.leaderelection.Id;
  * @author gaurav
  */
 public final class SwimFDFailedMessage implements Request {
+  private static final long serialVersionUID = 1L;
+
   private Id senderId;
   private Id failedId;
   private Epoch epoch;

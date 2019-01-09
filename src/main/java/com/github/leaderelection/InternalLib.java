@@ -1,5 +1,11 @@
 package com.github.leaderelection;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,6 +36,52 @@ public final class InternalLib {
    */
   public static ObjectMapper getObjectMapper() {
     return objectMapper;
+  }
+
+  /**
+   * Flatten the passed object to a byte array. Note that the passed toFlatten object needs to be
+   * Serializable.
+   */
+  public static byte[] serialize(final Serializable toFlatten) {
+    byte[] serialized = null;
+    ObjectOutputStream objectOutputStream = null;
+    try {
+      final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+      objectOutputStream.writeObject(toFlatten);
+      serialized = byteArrayOutputStream.toByteArray();
+    } catch (Exception problem) {
+      logger.error("Unable to serialize the provided object to a byte array", problem);
+    } finally {
+      try {
+        objectOutputStream.close();
+      } catch (Exception problem) {
+        logger.error("Unable to serialize the provided object to a byte array", problem);
+      }
+    }
+    return serialized;
+  }
+
+  /**
+   * Deserialize the provided byte array to a Serializable object.
+   */
+  public static Object deserialize(final byte[] flattened) {
+    Object deserialized = null;
+    ObjectInputStream objectInputStream = null;
+    try {
+      objectInputStream = new ObjectInputStream(new ByteArrayInputStream(flattened));
+      deserialized = objectInputStream.readObject();
+    } catch (Exception problem) {
+      logger.error("Unable to deserialize the provided byte array to an object", problem);
+    } finally {
+      if (objectInputStream != null)
+        try {
+          objectInputStream.close();
+        } catch (Exception problem) {
+          logger.error("Unable to deserialize the provided byte array to an object", problem);
+        }
+    }
+    return deserialized;
   }
 
 }

@@ -1,5 +1,6 @@
 package com.github.leaderelection;
 
+import java.io.Serializable;
 import java.util.function.Function;
 
 /**
@@ -7,7 +8,8 @@ import java.util.function.Function;
  * 
  * @author gaurav
  */
-public interface Id extends Function<Void, String>, Comparable<Id> {
+public interface Id extends Serializable, Function<Void, String>, Comparable<Id> {
+
   @Override
   default String apply(Void blah) {
     return getId();

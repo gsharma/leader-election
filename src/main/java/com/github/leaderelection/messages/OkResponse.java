@@ -10,6 +10,8 @@ import com.github.leaderelection.Id;
  * @author gaurav
  */
 public final class OkResponse implements Response {
+  private static final long serialVersionUID = 1L;
+
   private Id senderId;
   private Epoch epoch;
   private ResponseType type = ResponseType.OK;

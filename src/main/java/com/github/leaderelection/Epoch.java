@@ -1,11 +1,15 @@
 package com.github.leaderelection;
 
+import java.io.Serializable;
+
 /**
  * Model the cluster/group members' epoch.
  * 
  * @author gaurav
  */
-public final class Epoch implements Comparable<Epoch> {
+public final class Epoch implements Serializable, Comparable<Epoch> {
+  private static final long serialVersionUID = 1L;
+
   private final long epoch;
 
   public Epoch() {
