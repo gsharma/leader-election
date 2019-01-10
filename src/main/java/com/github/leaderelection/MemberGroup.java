@@ -30,7 +30,7 @@ public final class MemberGroup {
 
   public Member findMember(final Id memberId) {
     Member member = null;
-    for (final Member candidate : members) {
+    for (final Member candidate : allMembers()) {
       if (candidate.getId().equals(memberId)) {
         member = candidate;
         break;
@@ -49,7 +49,7 @@ public final class MemberGroup {
 
   public List<Member> largerMembers(final Member member) {
     final List<Member> largerMembers = new ArrayList<>();
-    for (final Member otherMember : members) {
+    for (final Member otherMember : allMembers()) {
       if (member.compareTo(otherMember) < 0) {
         largerMembers.add(otherMember);
       }
@@ -59,7 +59,7 @@ public final class MemberGroup {
 
   public List<Member> smallerMembers(final Member member) {
     final List<Member> smallerMembers = new ArrayList<>();
-    for (final Member otherMember : members) {
+    for (final Member otherMember : allMembers()) {
       if (member.compareTo(otherMember) > 0) {
         smallerMembers.add(otherMember);
       }
