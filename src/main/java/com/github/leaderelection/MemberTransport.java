@@ -13,27 +13,32 @@ import com.github.leaderelection.messages.Response;
  * @author gaurav
  */
 public final class MemberTransport {
+  private final Member sourceMember;
   private final MemberGroup memberGroup;
   private final TCPTransport tcpTransport;
+  private final ServiceHandler serviceHandler;
 
-  public MemberTransport(final MemberGroup memberGroup) {
+  public MemberTransport(final Member sourceMember, final MemberGroup memberGroup) {
     this.tcpTransport = TCPTransport.getInstance();
     this.tcpTransport.start();
     this.memberGroup = memberGroup;
-    // this.sourceMember = sourceMember;
+    this.sourceMember = sourceMember;
+    this.serviceHandler =
+        new ServiceHandler(this.sourceMember, this.memberGroup, this.tcpTransport);
   }
 
   public UUID bindServer(final String host, final int port) throws IOException {
     return tcpTransport.bindServer(host, port, null);
   }
 
-  public Response dispatchTo(final Member member, final Request request) throws IOException {
+  public Response dispatchTo(final Member destinationMember, final Request request)
+      throws IOException {
     Response response = null;
     if (isRunning()) {
       final byte[] requestBytes = InternalLib.serialize(request);
       // final byte[] requestBytes = request.serialize();
       final byte[] responseBytes =
-          tcpTransport.send(member.getHost(), member.getPort(), requestBytes);
+          tcpTransport.send(destinationMember.getHost(), destinationMember.getPort(), requestBytes);
       if (responseBytes != null && responseBytes.length != 0) {
         response = Response.class.cast(InternalLib.deserialize(responseBytes));
         // return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);

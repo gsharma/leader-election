@@ -1,12 +1,25 @@
 package com.github.leaderelection;
 
 /**
- * A service listener that exists to handle requests and generate appropriate responses.
+ * TODO
  * 
  * @author gaurav
  */
-public interface ServiceHandler {
+class ServiceHandler {
+  private final Member sourceMember;
+  private final MemberGroup memberGroup;
+  private final TCPTransport transport;
 
-  byte[] service(final byte[] request);
+  ServiceHandler(final Member sourceMember, final MemberGroup memberGroup,
+      final TCPTransport transport) {
+    this.memberGroup = memberGroup;
+    this.sourceMember = sourceMember;
+    this.transport = transport;
+  }
+
+  // TODO
+  byte[] service(byte[] request) {
+    return null;
+  }
 
 }

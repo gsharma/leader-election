@@ -342,9 +342,6 @@ final class TCPTransport {
             final byte[] requestPayload = read(clientChannel);
 
             if (requestPayload.length > 0) {
-              logger.info("Server received from client {} request:{}bytes",
-                  clientChannel.getRemoteAddress(), requestPayload.length);
-
               // TODO:
               // 1. externalize to use serviceHandler.service(requestPayload)
               // 2. ensure deserialization happens correctly
@@ -354,6 +351,9 @@ final class TCPTransport {
               } catch (Exception serdeProblem) {
                 logger.error(serdeProblem);
               }
+
+              logger.info("Server received from client {} {} {}bytes",
+                  clientChannel.getRemoteAddress(), request.getType(), requestPayload.length);
 
               /*try {
                 request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
@@ -377,6 +377,10 @@ final class TCPTransport {
                     logger.info("Received::{}, Responded with::{}", request, response);
                     break;
                   case FD_PING_REQUEST:
+                    // TODO
+                    final SwimFDPingRequestProbe pingRequestProbe = SwimFDPingRequestProbe.class.cast(request);
+                    final Id memberToPing = pingRequestProbe.getMemberToProbe();
+                    // send(memberToPing, InternalLib.serialize(pingRequestProbe));
                     response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
                     logger.info("Received::{}, Responded with::{}", request, response);
                     break;

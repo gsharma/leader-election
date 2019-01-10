@@ -26,7 +26,7 @@ public final class Member implements Comparable<Member> {
   private final Id id;
   private final String host;
   private final int port;
-  private final MemberTransport transport;
+  private MemberTransport transport;
   private UUID serverTransportId;
 
   private SwimFailureDetector failureDetector;
@@ -38,13 +38,16 @@ public final class Member implements Comparable<Member> {
 
   private final MemberGroup memberGroup;
 
-  public Member(final MemberTransport transport, final Id id, final String host, final int port,
-      final MemberGroup memberGroup) throws IOException {
+  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup)
+      throws IOException {
     this.id = id;
     this.host = host;
     this.port = port;
-    this.transport = transport;
     this.memberGroup = memberGroup;
+  }
+
+  public MemberTransport getTransport() {
+    return transport;
   }
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
@@ -52,6 +55,7 @@ public final class Member implements Comparable<Member> {
   public synchronized void init() throws IOException {
     logger.info("Initializing member:{}", id);
     if (status != Status.ALIVE) {
+      transport = new MemberTransport(this, memberGroup);
       serverTransportId = transport.bindServer(host, port);
       memberGroup.addMember(this);
       failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
@@ -67,6 +71,7 @@ public final class Member implements Comparable<Member> {
   public synchronized void shutdown() throws IOException {
     if (status != Status.DEAD) {
       transport.stopServer(serverTransportId);
+      transport.shutdown();
       serverTransportId = null;
       failureDetector.tini();
       status = Status.DEAD;

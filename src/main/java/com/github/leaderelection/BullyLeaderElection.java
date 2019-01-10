@@ -29,11 +29,10 @@ public final class BullyLeaderElection implements LeaderElection {
 
   private Epoch epoch = new Epoch();
 
-  public BullyLeaderElection(final MemberGroup memberGroup, final Member sourceMember,
-      final MemberTransport transport) {
+  public BullyLeaderElection(final MemberGroup memberGroup, final Member sourceMember) {
     this.memberGroup = memberGroup;
     this.sourceMember = sourceMember;
-    this.transport = transport;
+    this.transport = sourceMember.getTransport();
   }
 
   @Override
