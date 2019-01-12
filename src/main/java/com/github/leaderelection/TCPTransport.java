@@ -23,14 +23,6 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.leaderelection.messages.OkResponse;
-import com.github.leaderelection.messages.Request;
-import com.github.leaderelection.messages.RequestType;
-import com.github.leaderelection.messages.Response;
-import com.github.leaderelection.messages.SwimFDAckResponse;
-import com.github.leaderelection.messages.SwimFDPingProbe;
-import com.github.leaderelection.messages.SwimFDPingRequestProbe;
-
 /**
  * A simple TCP transport handler - note that this is designed to serve the needs of both a client
  * and a server.
@@ -154,7 +146,7 @@ final class TCPTransport {
               final Socket socket = clientChannel.socket();
               socket.setTcpNoDelay(true);
             } catch (IOException problem) {
-              logger.error(problem);
+              logger.error("Encountered unexpected problem", problem);
             }
             return clientChannel;
           }
@@ -210,8 +202,11 @@ final class TCPTransport {
     return bytes;
   }
 
-  private static int write(final SocketChannel clientChannel, final byte[] payload)
-      throws IOException {
+  private static int write(final SocketChannel clientChannel, byte[] payload) throws IOException {
+    if (payload == null) {
+      logger.warn("Server sending to client {} response:0bytes", clientChannel.getRemoteAddress());
+      payload = new byte[0];
+    }
     final ByteBuffer buffer = ByteBuffer.wrap(payload);
     int bytesWritten = clientChannel.write(buffer);
     int totalBytesWritten = bytesWritten;
@@ -299,14 +294,11 @@ final class TCPTransport {
       setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
         @Override
         public void uncaughtException(Thread thread, Throwable problem) {
-          logger.error(problem);
+          logger.error("Encountered uncaught exception", problem);
         }
       });
     }
 
-    /**
-     * TODO: register a listener
-     */
     private void service(final Selector selector) throws IOException {
       final ByteBuffer buffer = ByteBuffer.allocate(256);
       while (true) {
@@ -342,80 +334,12 @@ final class TCPTransport {
             final byte[] requestPayload = read(clientChannel);
 
             if (requestPayload.length > 0) {
-              // TODO:
-              // 1. externalize to use serviceHandler.service(requestPayload)
-              // 2. ensure deserialization happens correctly
-              Request request = null;
-              try {
-                request = (Request) InternalLib.deserialize(requestPayload);
-              } catch (Exception serdeProblem) {
-                logger.error(serdeProblem);
-              }
-
-              logger.info("Server received from client {} {} {}bytes",
-                  clientChannel.getRemoteAddress(), request.getType(), requestPayload.length);
-
-              /*try {
-                request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
-                    SwimFDPingProbe.class);
-              } catch (Exception serdeProblem1) {
-                // logger.error(serdeProblem1);
-                try {
-                  request = (Request) InternalLib.getObjectMapper().readValue(requestPayload,
-                      SwimFDPingRequestProbe.class);
-                } catch (Exception serdeProblem2) {
-                  logger.error(serdeProblem2);
-                }
-              }*/
-
-              Response response = null;
-              if (request != null) {
-                final RequestType requestType = request.getType();
-                switch (requestType) {
-                  case FD_PING:
-                    response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
-                    logger.info("Received::{}, Responded with::{}", request, response);
-                    break;
-                  case FD_PING_REQUEST:
-                    // TODO
-                    final SwimFDPingRequestProbe pingRequestProbe = SwimFDPingRequestProbe.class.cast(request);
-                    final Id memberToPing = pingRequestProbe.getMemberToProbe();
-                    // send(memberToPing, InternalLib.serialize(pingRequestProbe));
-                    response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
-                    logger.info("Received::{}, Responded with::{}", request, response);
-                    break;
-                  case FD_FAILED:
-                    break;
-                  case ELECTION:
-                    // TODO: forward to relevant members
-                    response = new OkResponse(request.getSenderId(), request.getEpoch());
-                    logger.info("Received::{}, Responded with::{}", request, response);
-                    break;
-                  case COORDINATOR:
-                    response = new OkResponse(request.getSenderId(), request.getEpoch());
-                    logger.info("Received::{}, Responded with::{}", request, response);
-                    break;
-                }
-              }
-
-              byte[] responseBytes = null;
-              if (response != null) {
-                try {
-                  responseBytes = InternalLib.serialize(response);
-                } catch (Exception serdeProblem) {
-                  logger.error(serdeProblem);
-                }
-              }
-
-              // TODO
+              byte[] responsePayload = null;
               if (serviceHandler != null) {
-                byte[] responsePayload = serviceHandler.service(requestPayload);
+                responsePayload = serviceHandler.service(requestPayload);
               }
 
-              logger.info("Server sending to client {} response:{}bytes",
-                  clientChannel.getRemoteAddress(), responseBytes.length);
-
-              write(clientChannel, responseBytes);
+              write(clientChannel, responsePayload);
               buffer.clear();
             }
           }

@@ -24,11 +24,11 @@ public final class MemberTransport {
     this.memberGroup = memberGroup;
     this.sourceMember = sourceMember;
     this.serviceHandler =
-        new ServiceHandler(this.sourceMember, this.memberGroup, this.tcpTransport);
+        new MemberServiceHandler(this.sourceMember, this.memberGroup, this.tcpTransport);
   }
 
   public UUID bindServer(final String host, final int port) throws IOException {
-    return tcpTransport.bindServer(host, port, null);
+    return tcpTransport.bindServer(host, port, serviceHandler);
   }
 
   public Response dispatchTo(final Member destinationMember, final Request request)

@@ -1,25 +1,13 @@
 package com.github.leaderelection;
 
 /**
- * TODO
+ * A service handler skeleton.
  * 
  * @author gaurav
  */
-class ServiceHandler {
-  private final Member sourceMember;
-  private final MemberGroup memberGroup;
-  private final TCPTransport transport;
+interface ServiceHandler {
 
-  ServiceHandler(final Member sourceMember, final MemberGroup memberGroup,
-      final TCPTransport transport) {
-    this.memberGroup = memberGroup;
-    this.sourceMember = sourceMember;
-    this.transport = transport;
-  }
-
-  // TODO
-  byte[] service(byte[] request) {
-    return null;
-  }
+  // Service the request and return the response
+  byte[] service(byte[] request);
 
 }
