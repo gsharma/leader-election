@@ -63,10 +63,9 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           Response response = null;
           try {
             response = transport.dispatchTo(memberToProbe, pingProbe);
-          } catch (IOException problem) {
-            // TODO: handle timeout
           } catch (Exception problem) {
             // might have shutdown
+            logger.error("Encountered error dispatching ping probe to " + memberToProbe, problem);
           }
 
           SwimFDAckResponse ackResponse = null;

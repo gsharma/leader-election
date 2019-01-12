@@ -67,6 +67,10 @@ public final class InternalLib {
    */
   public static Object deserialize(final byte[] flattened) {
     Object deserialized = null;
+    if (flattened == null || flattened.length == 0) {
+      logger.warn("Cannot deserialize an empty or null byte array");
+      return deserialized;
+    }
     ObjectInputStream objectInputStream = null;
     try {
       objectInputStream = new ObjectInputStream(new ByteArrayInputStream(flattened));
