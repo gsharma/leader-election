@@ -13,6 +13,7 @@ import java.util.List;
 public final class MemberGroup {
   private final List<Member> members = new ArrayList<>();
   private final Id id;
+  private Member leader;
 
   public MemberGroup(final Id id) {
     this.id = id;
@@ -26,6 +27,14 @@ public final class MemberGroup {
   // TODO: should be done via broadcast to all members in the group
   public boolean addMember(final Member member) {
     return members.add(member);
+  }
+
+  public void setLeader(final Member leader) {
+    this.leader = leader;
+  }
+
+  public Member getLeader() {
+    return leader;
   }
 
   public Member findMember(final Id memberId) {
@@ -80,7 +89,9 @@ public final class MemberGroup {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("MemberGroup [members=").append(members).append(", ").append(id).append("]");
+    builder.append("MemberGroup [id=").append(id).append(", leader=")
+        .append(leader != null ? leader.getId().toString() : "null").append(", members=")
+        .append(members).append("]");
     return builder.toString();
   }
 

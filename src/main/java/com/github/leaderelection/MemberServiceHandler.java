@@ -112,7 +112,17 @@ class MemberServiceHandler implements ServiceHandler {
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
         case COORDINATOR:
-          response = new OkResponse(request.getSenderId(), request.getEpoch());
+          // sender is the leader
+          final Id leaderId = request.getSenderId();
+          final Member leader = memberGroup.findMember(leaderId);
+          while (leader.currentEpoch().after(sourceMember.currentEpoch())) {
+            sourceMember.incrementEpoch();
+          }
+          if (leader != null) {
+            logger.info("{} accepted elected leader {}", sourceMember.getId(), leaderId);
+            memberGroup.setLeader(leader);
+          }
+          response = new OkResponse(sourceMember.getId(), request.getEpoch());
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
       }

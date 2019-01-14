@@ -17,8 +17,6 @@ public class LeaderElectionTest {
   @Test
   public void testMemberGroup() throws Exception {
     final MemberGroup group = new MemberGroup(new RandomId());
-    // final MemberTransport transport = new MemberTransport(group);
-
     final String host = "localhost";
 
     final int portOne = 4005;
@@ -42,12 +40,21 @@ public class LeaderElectionTest {
     assertNotNull(memberThree.getServerTransportId());
     assertEquals(Status.ALIVE, memberThree.getStatus());
 
+    for (final Member groupMember : group.allMembers()) {
+      assertEquals(0L, groupMember.currentEpoch().getEpoch());
+    }
+
     Thread.sleep(3_000L);
 
     final Member bully = group.greatestIdMember();
     final LeaderElection election = new BullyLeaderElection(group, bully);
     final Member leader = election.electLeader();
     assertEquals(bully, leader);
+    assertEquals(bully, group.getLeader());
+    for (final Member groupMember : group.allMembers()) {
+      // TODO
+      // assertEquals(1L, groupMember.currentEpoch().getEpoch());
+    }
 
     memberOne.shutdown();
     assertEquals(Status.DEAD, memberOne.getStatus());
