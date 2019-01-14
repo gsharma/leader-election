@@ -5,12 +5,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * A group of members that together form a cluster. For the purposes
  * 
  * @author gaurav
  */
 public final class MemberGroup {
+  private static final Logger logger = LogManager.getLogger(MemberGroup.class.getSimpleName());
+
   private final List<Member> members = new ArrayList<>();
   private final Id id;
   private Member leader;
@@ -30,6 +35,7 @@ public final class MemberGroup {
   }
 
   public void setLeader(final Member leader) {
+    logger.info("Setting leader {} in group {}", leader.getId(), id);
     this.leader = leader;
   }
 

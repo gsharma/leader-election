@@ -48,11 +48,15 @@ public final class BullyLeaderElection implements LeaderElection {
     // sourceMember has the highest id - grab and announce leadership
     if (greaterIdMembers.isEmpty()) {
       leader = sourceMember;
+      memberGroup.setLeader(leader);
 
       final CoordinatorRequest victoryMessage = new CoordinatorRequest(sourceMember.getId(), epoch);
 
       for (final Member member : otherMembers(memberGroup, sourceMember)) {
         logger.info("Announcing leader:{} to {} at {}", leader.getId(), member.getId(), epoch);
+        while (leader.currentEpoch().after(member.currentEpoch())) {
+          member.incrementEpoch();
+        }
         try {
           Response response = transport.dispatchTo(member, victoryMessage);
         } catch (IOException problem) {
@@ -61,7 +65,6 @@ public final class BullyLeaderElection implements LeaderElection {
     }
     // broadcast election to all greaterIdMembers
     else {
-      // TODO
       final ElectionRequest electionRequest = new ElectionRequest(sourceMember.getId(), epoch);
 
       for (final Member greaterMember : greaterIdMembers) {

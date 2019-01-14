@@ -15,7 +15,7 @@ import org.junit.Test;
 public class LeaderElectionTest {
 
   @Test
-  public void testMemberGroup() throws Exception {
+  public void testBullyLeaderElection() throws Exception {
     final MemberGroup group = new MemberGroup(new RandomId());
     final String host = "localhost";
 

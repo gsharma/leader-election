@@ -60,7 +60,7 @@ public final class Member implements Comparable<Member> {
       memberGroup.addMember(this);
       failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
       failureDetector.init();
-      status = Status.ALIVE;
+      setStatus(Status.ALIVE);
     } else {
       logger.info("Cannot re-init an already alive member");
     }
@@ -74,7 +74,7 @@ public final class Member implements Comparable<Member> {
       transport.shutdown();
       serverTransportId = null;
       failureDetector.tini();
-      status = Status.DEAD;
+      setStatus(Status.DEAD);
       logger.info("Shutdown member:{}", id);
     } else {
       logger.info("Cannot shutdown an already dead member");
@@ -87,7 +87,10 @@ public final class Member implements Comparable<Member> {
   }
 
   public void incrementEpoch() {
+    long previous = epoch.getEpoch();
     epoch = epoch.increment();
+    long current = epoch.getEpoch();
+    logger.info("Member {} epoch incr {}->{}", id, previous, current);
   }
 
   public Epoch currentEpoch() {
@@ -103,6 +106,7 @@ public final class Member implements Comparable<Member> {
   }
 
   public void setStatus(final Status status) {
+    logger.info("Changing member {} status from {} to {}", id, this.status, status);
     this.status = status;
   }
 

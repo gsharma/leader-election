@@ -9,6 +9,7 @@ import com.github.leaderelection.messages.Request;
 import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.SwimFDAckResponse;
+import com.github.leaderelection.messages.SwimFDFailedMessage;
 import com.github.leaderelection.messages.SwimFDPingProbe;
 import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
@@ -47,11 +48,13 @@ class MemberServiceHandler implements ServiceHandler {
     if (request != null) {
       final RequestType requestType = request.getType();
       switch (requestType) {
-        case FD_PING:
+        case FD_PING: {
           response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
-        case FD_PING_REQUEST:
+        }
+
+        case FD_PING_REQUEST: {
           final SwimFDPingRequestProbe pingRequestProbe =
               SwimFDPingRequestProbe.class.cast(request);
           final Id memberToPing = pingRequestProbe.getMemberToProbe();
@@ -77,10 +80,21 @@ class MemberServiceHandler implements ServiceHandler {
           }
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
-        case FD_FAILED:
+        }
+
+        // Upon detecting the failure of another group member, the member simply broadcasts this
+        // information to the rest of the group as a failed message. A member receiving this message
+        // deletes from its local membership list.
+        case FD_FAILED: {
           // TODO
+          final SwimFDFailedMessage failedRequest = SwimFDFailedMessage.class.cast(request);
+          final Id failedMemberId = failedRequest.getFailedId();
+          final Member failedMember = memberGroup.findMember(failedMemberId);
+          failedMember.setStatus(Status.DEAD);
           break;
-        case ELECTION:
+        }
+
+        case ELECTION: {
           final ElectionRequest electionRequest = ElectionRequest.class.cast(request);
           final Id senderId = electionRequest.getSenderId();
           int comparisonResult = senderId.compareTo(sourceMember.getId());
@@ -96,6 +110,7 @@ class MemberServiceHandler implements ServiceHandler {
               // Answer message back and starts the election process at the beginning, by sending an
               // Election message to higher-numbered processes.
               response = new OkResponse(request.getSenderId(), request.getEpoch());
+
               // forward to relevant members
               for (final Member largerMember : memberGroup.largerMembers(sourceMember)) {
                 final ElectionRequest election =
@@ -111,7 +126,9 @@ class MemberServiceHandler implements ServiceHandler {
           }
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
-        case COORDINATOR:
+        }
+
+        case COORDINATOR: {
           // sender is the leader
           final Id leaderId = request.getSenderId();
           final Member leader = memberGroup.findMember(leaderId);
@@ -125,6 +142,7 @@ class MemberServiceHandler implements ServiceHandler {
           response = new OkResponse(sourceMember.getId(), request.getEpoch());
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
+        }
       }
     }
 

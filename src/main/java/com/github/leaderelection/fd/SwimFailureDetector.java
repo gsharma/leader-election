@@ -107,7 +107,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
             }
           }
         } else {
-          logger.info("[{}] Failure detector waiting for other members to join group",
+          logger.info("{} Failure detector waiting for other members to join group",
               sourceMemberId);
         }
 
@@ -125,7 +125,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
     if (index == memberCount && index > 0) {
       --index;
     }
-    logger.info("[{}] Selected member at index {} from {} members in group", sourceMemberId, index,
+    logger.info("{} Selected member at index {} from {} members in group", sourceMemberId, index,
         memberGroup.allMembers().size());
     return allMembers.get(index);
   }
@@ -138,7 +138,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public boolean init() {
-    logger.info("[{}] Starting failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("{} Starting failure detector for {}", sourceMemberId, sourceMember);
     start();
     return true;
   }
@@ -151,9 +151,9 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   @Override
   public boolean tini() {
     // TODO
-    logger.info("[{}] Stopping failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("{} Stopping failure detector for {}", sourceMemberId, sourceMember);
     interrupt();
-    logger.info("[{}] Stopped failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("{} Stopped failure detector for {}", sourceMemberId, sourceMember);
     return true;
   }
 
