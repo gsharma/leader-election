@@ -2,6 +2,7 @@ package com.github.leaderelection;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,9 +33,8 @@ public final class Member implements Comparable<Member> {
   private SwimFailureDetector failureDetector;
 
   // mutables
-  private volatile Status status = Status.UNKNOWN;
+  private AtomicReference<Status> status = new AtomicReference<>(Status.UNKNOWN);
   private Epoch epoch = new Epoch();
-  // private boolean leader;
 
   private final MemberGroup memberGroup;
 
@@ -52,33 +52,47 @@ public final class Member implements Comparable<Member> {
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
   // purposes - typically, there will be a single Member instance in a process/thread
-  public synchronized void init() throws IOException {
+  public synchronized boolean init() {
+    boolean success = false;
     logger.info("Initializing member:{}", id);
-    if (status != Status.ALIVE) {
-      transport = new MemberTransport(this, memberGroup);
-      serverTransportId = transport.bindServer(host, port);
-      memberGroup.addMember(this);
-      failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
-      failureDetector.init();
-      setStatus(Status.ALIVE);
+    if (status.get() != Status.ALIVE) {
+      try {
+        transport = new MemberTransport(this, memberGroup);
+        serverTransportId = transport.bindServer(host, port);
+        memberGroup.addMember(this);
+        failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
+        failureDetector.init();
+        setStatus(Status.ALIVE);
+        success = true;
+      } catch (Exception problem) {
+        logger.error("Problem initializing member:" + id, problem);
+      }
     } else {
       logger.info("Cannot re-init an already alive member");
     }
+    return success;
   }
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
   // purposes - typically, there will be a single Member instance in a process/thread
-  public synchronized void shutdown() throws IOException {
-    if (status != Status.DEAD) {
-      transport.stopServer(serverTransportId);
-      transport.shutdown();
-      serverTransportId = null;
-      failureDetector.tini();
-      setStatus(Status.DEAD);
-      logger.info("Shutdown member:{}", id);
+  public synchronized boolean shutdown() {
+    boolean success = false;
+    if (status.get() != Status.DEAD) {
+      try {
+        transport.stopServer(serverTransportId);
+        transport.shutdown();
+        serverTransportId = null;
+        failureDetector.tini();
+        setStatus(Status.DEAD);
+        success = true;
+        logger.info("Shutdown member:{}", id);
+      } catch (Exception problem) {
+        logger.error("Problem shutting down member:" + id, problem);
+      }
     } else {
       logger.info("Cannot shutdown an already dead member");
     }
+    return success;
   }
 
   public Response serviceRequest(final Request request) {
@@ -102,12 +116,12 @@ public final class Member implements Comparable<Member> {
   }
 
   public Status getStatus() {
-    return status;
+    return status.get();
   }
 
   public void setStatus(final Status status) {
     logger.info("Changing member {} status from {} to {}", id, this.status, status);
-    this.status = status;
+    this.status.set(status);
   }
 
   public Id getId() {

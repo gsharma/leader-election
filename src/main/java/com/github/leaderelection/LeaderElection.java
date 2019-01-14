@@ -7,4 +7,6 @@ package com.github.leaderelection;
  */
 public interface LeaderElection {
   Member electLeader();
+
+  boolean shutdown();
 }

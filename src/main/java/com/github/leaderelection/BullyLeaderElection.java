@@ -3,11 +3,11 @@ package com.github.leaderelection;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.leaderelection.fd.FailureDetector;
 import com.github.leaderelection.messages.CoordinatorRequest;
 import com.github.leaderelection.messages.ElectionRequest;
 import com.github.leaderelection.messages.Response;
@@ -22,10 +22,10 @@ public final class BullyLeaderElection implements LeaderElection {
       LogManager.getLogger(BullyLeaderElection.class.getSimpleName());
 
   private final MemberGroup memberGroup;
-  // private final FailureDetector failureDetector;
   private final MemberTransport transport;
-
   private final Member sourceMember;
+
+  private final AtomicBoolean running = new AtomicBoolean();
 
   private Epoch epoch = new Epoch();
 
@@ -33,11 +33,16 @@ public final class BullyLeaderElection implements LeaderElection {
     this.memberGroup = memberGroup;
     this.sourceMember = sourceMember;
     this.transport = sourceMember.getTransport();
+    running.compareAndSet(false, true);
   }
 
   @Override
-  public Member electLeader() {
+  public synchronized Member electLeader() {
     Member leader = null;
+    if (!running.get()) {
+      logger.warn("Cannot elect a leader when leader election is shutdown");
+      return leader;
+    }
 
     // bump epoch
     incrementEpoch();
@@ -80,6 +85,17 @@ public final class BullyLeaderElection implements LeaderElection {
     logger.info("Elected leader:{} at {}", leader.getId(), epoch);
 
     return leader;
+  }
+
+  @Override
+  public synchronized boolean shutdown() {
+    boolean success = true;
+    if (running.compareAndSet(true, false)) {
+      for (final Member member : memberGroup.allMembers()) {
+        success &= member.shutdown();
+      }
+    }
+    return success;
   }
 
   private static List<Member> otherMembers(final MemberGroup memberGroup,

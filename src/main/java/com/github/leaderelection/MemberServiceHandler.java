@@ -86,7 +86,6 @@ class MemberServiceHandler implements ServiceHandler {
         // information to the rest of the group as a failed message. A member receiving this message
         // deletes from its local membership list.
         case FD_FAILED: {
-          // TODO
           final SwimFDFailedMessage failedRequest = SwimFDFailedMessage.class.cast(request);
           final Id failedMemberId = failedRequest.getFailedId();
           final Member failedMember = memberGroup.findMember(failedMemberId);

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -22,21 +23,21 @@ public class LeaderElectionTest {
     final int portOne = 4005;
     final Member memberOne = new Member(new RandomId(), host, portOne, group);
     assertNull(memberOne.getServerTransportId());
-    memberOne.init();
+    assertTrue(memberOne.init());
     assertNotNull(memberOne.getServerTransportId());
     assertEquals(Status.ALIVE, memberOne.getStatus());
 
     final int portTwo = 4004;
     final Member memberTwo = new Member(new RandomId(), host, portTwo, group);
     assertNull(memberTwo.getServerTransportId());
-    memberTwo.init();
+    assertTrue(memberTwo.init());
     assertNotNull(memberTwo.getServerTransportId());
     assertEquals(Status.ALIVE, memberTwo.getStatus());
 
     final int portThree = 4003;
     final Member memberThree = new Member(new RandomId(), host, portThree, group);
     assertNull(memberThree.getServerTransportId());
-    memberThree.init();
+    assertTrue(memberThree.init());
     assertNotNull(memberThree.getServerTransportId());
     assertEquals(Status.ALIVE, memberThree.getStatus());
 
@@ -56,11 +57,10 @@ public class LeaderElectionTest {
       // assertEquals(1L, groupMember.currentEpoch().getEpoch());
     }
 
-    memberOne.shutdown();
+    assertTrue(election.shutdown());
+
     assertEquals(Status.DEAD, memberOne.getStatus());
-    memberTwo.shutdown();
     assertEquals(Status.DEAD, memberTwo.getStatus());
-    memberThree.shutdown();
     assertEquals(Status.DEAD, memberThree.getStatus());
 
     assertFalse(memberOne.getTransport().isRunning());

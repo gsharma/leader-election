@@ -26,7 +26,9 @@ public final class MemberGroup {
 
   // TODO: should be done via broadcast to all members in the group
   public boolean removeMember(final Member member) {
-    return members.remove(member);
+    member.setStatus(Status.DEAD);
+    return true;
+    // return members.remove(member);
   }
 
   // TODO: should be done via broadcast to all members in the group
