@@ -5,7 +5,7 @@ package com.github.leaderelection;
  * 
  * @author gaurav
  */
-public interface LeaderElection {
+public interface LeaderElection extends MemberFailureListener {
   Member electLeader();
 
   boolean shutdown();

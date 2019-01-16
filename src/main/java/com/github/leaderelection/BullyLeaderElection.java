@@ -38,6 +38,8 @@ public final class BullyLeaderElection implements LeaderElection {
 
   @Override
   public synchronized Member electLeader() {
+    logger.info("Starting a round of leader election at {}", epoch);
+
     Member leader = null;
     if (!running.get()) {
       logger.warn("Cannot elect a leader when leader election is shutdown");
@@ -83,7 +85,6 @@ public final class BullyLeaderElection implements LeaderElection {
     }
 
     logger.info("Elected leader:{} at {}", leader.getId(), epoch);
-
     return leader;
   }
 
@@ -107,6 +108,12 @@ public final class BullyLeaderElection implements LeaderElection {
 
   private void incrementEpoch() {
     epoch = epoch.increment();
+  }
+
+  @Override
+  public void notifyMemberFailed(final Id failedMemberId) {
+    logger.info("Received failure notification for memberId:{}", failedMemberId);
+    electLeader();
   }
 
 }
