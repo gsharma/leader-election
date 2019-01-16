@@ -10,6 +10,8 @@ public enum RequestType {
   // election-related requests
   ELECTION, COORDINATOR,
   // failure-detection requests
-  FD_PING, FD_PING_REQUEST, FD_FAILED;
+  FD_PING, FD_PING_REQUEST,
+  // membership change requests
+  MEMBER_FAILED, MEMBER_JOINED;
 
 }

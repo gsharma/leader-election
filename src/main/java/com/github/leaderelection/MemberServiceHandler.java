@@ -9,7 +9,7 @@ import com.github.leaderelection.messages.Request;
 import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.SwimFDAckResponse;
-import com.github.leaderelection.messages.SwimFDFailedMessage;
+import com.github.leaderelection.messages.MemberFailedMessage;
 import com.github.leaderelection.messages.SwimFDPingProbe;
 import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
@@ -85,11 +85,23 @@ class MemberServiceHandler implements ServiceHandler {
         // Upon detecting the failure of another group member, the member simply broadcasts this
         // information to the rest of the group as a failed message. A member receiving this message
         // deletes from its local membership list.
-        case FD_FAILED: {
-          final SwimFDFailedMessage failedRequest = SwimFDFailedMessage.class.cast(request);
+        case MEMBER_FAILED: {
+          final MemberFailedMessage failedRequest = MemberFailedMessage.class.cast(request);
           final Id failedMemberId = failedRequest.getFailedId();
           final Member failedMember = memberGroup.findMember(failedMemberId);
-          failedMember.setStatus(Status.DEAD);
+          if (failedMember != null) {
+            failedMember.setStatus(Status.DEAD);
+          } else {
+            logger.warn("Could not locate failed member:{} in group:{}", failedMemberId,
+                memberGroup);
+          }
+          response = new OkResponse(sourceMember.getId(), request.getEpoch());
+          logger.info("Received::{}, Responded with::{}", request, response);
+          break;
+        }
+
+        // TODO
+        case MEMBER_JOINED: {
           break;
         }
 

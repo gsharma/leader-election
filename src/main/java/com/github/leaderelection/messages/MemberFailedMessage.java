@@ -10,15 +10,15 @@ import com.github.leaderelection.Id;
  * 
  * @author gaurav
  */
-public final class SwimFDFailedMessage implements Request {
+public final class MemberFailedMessage implements Request {
   private static final long serialVersionUID = 1L;
 
   private Id senderId;
   private Id failedId;
   private Epoch epoch;
-  private RequestType type = RequestType.FD_FAILED;
+  private RequestType type = RequestType.MEMBER_FAILED;
 
-  public SwimFDFailedMessage(final Id senderId, final Epoch epoch, final Id failedId) {
+  public MemberFailedMessage(final Id senderId, final Epoch epoch, final Id failedId) {
     this.senderId = senderId;
     this.epoch = epoch;
     this.failedId = failedId;
@@ -62,10 +62,10 @@ public final class SwimFDFailedMessage implements Request {
     if (obj == null) {
       return false;
     }
-    if (!(obj instanceof SwimFDFailedMessage)) {
+    if (!(obj instanceof MemberFailedMessage)) {
       return false;
     }
-    SwimFDFailedMessage other = (SwimFDFailedMessage) obj;
+    MemberFailedMessage other = (MemberFailedMessage) obj;
     if (epoch == null) {
       if (other.epoch != null) {
         return false;
@@ -94,12 +94,12 @@ public final class SwimFDFailedMessage implements Request {
   }
 
   // for ser-de
-  private SwimFDFailedMessage() {}
+  private MemberFailedMessage() {}
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("SwimFDFailedMessage [senderId=").append(senderId).append(", epoch=")
+    builder.append("MemberFailedMessage [senderId=").append(senderId).append(", epoch=")
         .append(epoch).append(", type=").append(", failedId=").append(failedId).append(type)
         .append("]");
     return builder.toString();

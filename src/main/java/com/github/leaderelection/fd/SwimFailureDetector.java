@@ -12,6 +12,7 @@ import com.github.leaderelection.Id;
 import com.github.leaderelection.Member;
 import com.github.leaderelection.MemberGroup;
 import com.github.leaderelection.MemberTransport;
+import com.github.leaderelection.messages.MemberFailedMessage;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.ResponseType;
 import com.github.leaderelection.messages.SwimFDAckResponse;
@@ -75,7 +76,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
           // say we didn't receive the ackResponse and timed out
           if (ackResponse == null && transport.isRunning()) {
-            final List<Member> proxyMembers = new ArrayList<>(memberGroup.allMembers());
+            List<Member> proxyMembers = new ArrayList<>(memberGroup.allMembers());
             proxyMembers.remove(memberToProbe);
             proxyMembers.remove(sourceMember);
 
@@ -91,18 +92,37 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
                 if (proxyResponse != null) {
                   proxyResponses.add(proxyResponse);
                 }
-              } catch (IOException problem) {
+              } catch (Exception problem) {
                 // TODO: handle timeout
+                logger.error("Encountered error trying to dispatch ping-request probe to member:"
+                    + proxyMember.getId(), problem);
               }
             }
 
+            boolean receivedAck = false;
             for (final Response proxyResponse : proxyResponses) {
               SwimFDAckResponse proxyAckResponse = null;
               if (proxyResponse != null && proxyResponse.getType() == ResponseType.ACK) {
                 proxyAckResponse = (SwimFDAckResponse) proxyResponse;
                 // as soon as any one of the proxying members send back an ack response, the
                 // sourceMember can again mark the memberToProbe as healthy and continue on
+                receivedAck = true;
                 break;
+              }
+            }
+
+            if (!receivedAck) {
+              proxyMembers = new ArrayList<>(memberGroup.allMembers());
+              proxyMembers.remove(memberToProbe);
+              final MemberFailedMessage memberFailed = new MemberFailedMessage(sourceMember.getId(),
+                  memberToProbe.currentEpoch(), memberToProbe.getId());
+              for (final Member memberToNotify : proxyMembers) {
+                try {
+                  Response okResponse = transport.dispatchTo(memberToNotify, memberFailed);
+                } catch (Exception problem) {
+                  logger.error("Encountered error trying to dispatch failed-message to member:"
+                      + memberToNotify.getId(), problem);
+                }
               }
             }
           }

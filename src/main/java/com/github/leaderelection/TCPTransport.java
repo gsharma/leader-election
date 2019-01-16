@@ -179,6 +179,10 @@ final class TCPTransport {
   }
 
   private static byte[] read(final SocketChannel clientChannel) throws IOException {
+    if (clientChannel == null || !clientChannel.isConnected()) {
+      logger.warn("Cannot read from a closed client channel");
+      return new byte[0];
+    }
     final ByteBuffer buffer = ByteBuffer.allocate(xsmallMessageSize);
     int bytesRead = clientChannel.read(buffer);
     int totalBytesRead = bytesRead;
@@ -203,6 +207,10 @@ final class TCPTransport {
   }
 
   private static int write(final SocketChannel clientChannel, byte[] payload) throws IOException {
+    if (clientChannel == null || !clientChannel.isConnected()) {
+      logger.warn("Cannot send server response on a closed client channel, sending -1 to client");
+      return -1;
+    }
     if (payload == null) {
       logger.warn("Server sending to client {} response:0bytes", clientChannel.getRemoteAddress());
       payload = new byte[0];

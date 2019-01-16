@@ -89,14 +89,12 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   @Override
-  public synchronized boolean shutdown() {
-    boolean success = true;
+  public synchronized void shutdown() {
     if (running.compareAndSet(true, false)) {
       for (final Member member : memberGroup.allMembers()) {
-        success &= member.shutdown();
+        member.shutdown();
       }
     }
-    return success;
   }
 
   private static List<Member> otherMembers(final MemberGroup memberGroup,

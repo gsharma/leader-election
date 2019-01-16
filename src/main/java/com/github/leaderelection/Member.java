@@ -75,8 +75,8 @@ public final class Member implements Comparable<Member> {
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
   // purposes - typically, there will be a single Member instance in a process/thread
-  public synchronized boolean shutdown() {
-    boolean success = false;
+  public synchronized void shutdown() {
+    // boolean success = false;
     if (status.get() != Status.DEAD) {
       try {
         transport.stopServer(serverTransportId);
@@ -84,7 +84,7 @@ public final class Member implements Comparable<Member> {
         serverTransportId = null;
         failureDetector.tini();
         setStatus(Status.DEAD);
-        success = true;
+        // success = true;
         logger.info("Shutdown member:{}", id);
       } catch (Exception problem) {
         logger.error("Problem shutting down member:" + id, problem);
@@ -92,7 +92,7 @@ public final class Member implements Comparable<Member> {
     } else {
       logger.info("Cannot shutdown an already dead member");
     }
-    return success;
+    // return success;
   }
 
   public Response serviceRequest(final Request request) {
