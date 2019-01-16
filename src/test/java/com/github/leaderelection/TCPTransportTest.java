@@ -3,7 +3,6 @@ package com.github.leaderelection;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,7 +21,7 @@ public final class TCPTransportTest {
   private static final Logger logger = LogManager.getLogger(TCPTransportTest.class.getSimpleName());
 
   @Test
-  public void testServerLifecycle() throws IOException {
+  public void testServerLifecycle() throws Exception {
     final String host = "localhost";
     int portOne = 6000;
     final ServiceHandler serviceHandler =

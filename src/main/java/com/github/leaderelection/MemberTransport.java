@@ -1,6 +1,5 @@
 package com.github.leaderelection;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import com.github.leaderelection.messages.Request;
@@ -27,12 +26,12 @@ public final class MemberTransport {
         new MemberServiceHandler(this.sourceMember, this.memberGroup, this.tcpTransport);
   }
 
-  public UUID bindServer(final String host, final int port) throws IOException {
+  public UUID bindServer(final String host, final int port) throws Exception {
     return tcpTransport.bindServer(host, port, serviceHandler);
   }
 
   public Response dispatchTo(final Member destinationMember, final Request request)
-      throws IOException {
+      throws Exception {
     Response response = null;
     if (isRunning()) {
       final byte[] requestBytes = InternalLib.serialize(request);
@@ -47,11 +46,11 @@ public final class MemberTransport {
     return response;
   }
 
-  public void stopServer(final UUID serverId) throws IOException {
+  public void stopServer(final UUID serverId) throws Exception {
     tcpTransport.stopServer(serverId);
   }
 
-  public void shutdown() throws IOException {
+  public void shutdown() throws Exception {
     tcpTransport.shutdown();
   }
 

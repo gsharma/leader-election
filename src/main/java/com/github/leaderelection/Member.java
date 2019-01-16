@@ -1,6 +1,5 @@
 package com.github.leaderelection;
 
-import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,8 +37,7 @@ public final class Member implements Comparable<Member> {
 
   private final MemberGroup memberGroup;
 
-  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup)
-      throws IOException {
+  public Member(final Id id, final String host, final int port, final MemberGroup memberGroup) {
     this.id = id;
     this.host = host;
     this.port = port;

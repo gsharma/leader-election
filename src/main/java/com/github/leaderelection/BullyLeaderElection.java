@@ -1,6 +1,5 @@
 package com.github.leaderelection;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,7 +65,9 @@ public final class BullyLeaderElection implements LeaderElection {
         }
         try {
           Response response = transport.dispatchTo(member, victoryMessage);
-        } catch (IOException problem) {
+        } catch (Exception problem) {
+          logger.error("Problem encountered dispatching victory message to member:{}",
+              member.getId(), problem);
         }
       }
     }
@@ -79,7 +80,9 @@ public final class BullyLeaderElection implements LeaderElection {
             greaterMember.getId(), epoch);
         try {
           Response response = transport.dispatchTo(greaterMember, electionRequest);
-        } catch (IOException problem) {
+        } catch (Exception problem) {
+          logger.error("Problem encountered dispatching election rqequest to member:{}",
+              greaterMember.getId(), problem);
         }
       }
     }

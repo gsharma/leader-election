@@ -1,6 +1,5 @@
 package com.github.leaderelection.fd;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -66,7 +65,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
           HeartbeatResponse response = null;
           try {
             response = HeartbeatResponse.class.cast(transport.dispatchTo(member, heartbeat));
-          } catch (IOException problem) {
+          } catch (Exception problem) {
           }
           if (response != null) {
             memberHeartbeats.get(member.getId()).add(response);
@@ -103,7 +102,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
     try {
       interrupt();
       transport.shutdown();
-    } catch (IOException problem) {
+    } catch (Exception problem) {
       // TODO
     }
     return true;

@@ -1,6 +1,5 @@
 package com.github.leaderelection.fd;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

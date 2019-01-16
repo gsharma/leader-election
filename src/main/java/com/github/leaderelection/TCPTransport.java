@@ -1,6 +1,5 @@
 package com.github.leaderelection;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
@@ -53,8 +52,7 @@ final class TCPTransport {
     private final ServerListener serverListener;
 
     private ServerMetadata(final String host, final int port,
-        final ServerSocketChannel serverChannel, final ServerListener serverListener)
-        throws IOException {
+        final ServerSocketChannel serverChannel, final ServerListener serverListener) {
       this.host = host;
       this.port = port;
       this.serverChannel = serverChannel;
@@ -70,7 +68,7 @@ final class TCPTransport {
    * Bind and create a server socket listening on the given host,port.
    */
   UUID bindServer(final String host, final int port, final ServiceHandler serviceHandler)
-      throws IOException {
+      throws Exception {
     if (!running.get()) {
       throw new IllegalStateException(
           "Cannot bind to a server socket via a shutdown tcp transport layer");
@@ -111,7 +109,7 @@ final class TCPTransport {
   /**
    * Send a payload to the server and receive a response from it.
    */
-  byte[] send(final UUID serverId, final byte[] payload) throws IOException {
+  byte[] send(final UUID serverId, final byte[] payload) throws Exception {
     if (!running.get()) {
       throw new IllegalStateException("Cannot send via a shutdown tcp transport layer");
     }
@@ -131,7 +129,7 @@ final class TCPTransport {
     return serverResponse;
   }
 
-  byte[] send(final String host, final int port, final byte[] payload) throws IOException {
+  byte[] send(final String host, final int port, final byte[] payload) throws Exception {
     if (!running.get()) {
       throw new IllegalStateException("Cannot send via a shutdown tcp transport layer");
     }
@@ -145,7 +143,7 @@ final class TCPTransport {
               clientChannel.configureBlocking(false);
               final Socket socket = clientChannel.socket();
               socket.setTcpNoDelay(true);
-            } catch (IOException problem) {
+            } catch (Exception problem) {
               logger.error("Encountered unexpected problem", problem);
             }
             return clientChannel;
@@ -160,7 +158,7 @@ final class TCPTransport {
   }
 
   private static byte[] send(final SocketChannel clientChannel, final byte[] payload,
-      boolean closeClient) throws IOException {
+      boolean closeClient) throws Exception {
     final int bytesWritten = write(clientChannel, payload);
     if (bytesWritten != payload.length) {
       logger.error("Failed to completely write the payload, intended:{}, actual:{}", payload.length,
@@ -178,7 +176,7 @@ final class TCPTransport {
     return serverResponse;
   }
 
-  private static byte[] read(final SocketChannel clientChannel) throws IOException {
+  private static byte[] read(final SocketChannel clientChannel) throws Exception {
     if (clientChannel == null || !clientChannel.isConnected()) {
       logger.warn("Cannot read from a closed client channel");
       return new byte[0];
@@ -206,7 +204,7 @@ final class TCPTransport {
     return bytes;
   }
 
-  private static int write(final SocketChannel clientChannel, byte[] payload) throws IOException {
+  private static int write(final SocketChannel clientChannel, byte[] payload) throws Exception {
     if (clientChannel == null || !clientChannel.isConnected()) {
       logger.warn("Cannot send server response on a closed client channel, sending -1 to client");
       return -1;
@@ -230,7 +228,7 @@ final class TCPTransport {
   /**
    * Close the server socket for the given serverId.
    */
-  void stopServer(final UUID serverId) throws IOException {
+  void stopServer(final UUID serverId) throws Exception {
     if (!running.get()) {
       return;
     }
@@ -249,7 +247,7 @@ final class TCPTransport {
     running.compareAndSet(false, true);
   }
 
-  void shutdown() throws IOException {
+  void shutdown() throws Exception {
     if (running.compareAndSet(true, false)) {
       logger.info("Shutting down transport layer");
       for (final Map.Entry<UUID, ServerMetadata> serverEntry : activeServers.entrySet()) {
@@ -266,7 +264,7 @@ final class TCPTransport {
   /**
    * Close the given client channel.
    */
-  private static void close(final SocketChannel clientChannel) throws IOException {
+  private static void close(final SocketChannel clientChannel) throws Exception {
     if (clientChannel != null && clientChannel.isOpen()) {
       logger.info("Closing client socket connected to {}", clientChannel.getRemoteAddress());
       clientChannel.close();
@@ -276,7 +274,7 @@ final class TCPTransport {
   /**
    * Close the given server channel.
    */
-  private static void close(final ServerSocketChannel serverChannel) throws IOException {
+  private static void close(final ServerSocketChannel serverChannel) throws Exception {
     if (serverChannel != null && serverChannel.isOpen()) {
       logger.info("Closing server socket listening on {}", serverChannel.getLocalAddress());
       serverChannel.close();
@@ -297,7 +295,8 @@ final class TCPTransport {
       try {
         final InetSocketAddress address = (InetSocketAddress) serverChannel.getLocalAddress();
         setName("acceptor-" + address.getPort());
-      } catch (IOException problem) {
+      } catch (Exception problem) {
+        logger.error("Problem encountered while initializing server listener", problem);
       }
       setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
         @Override
@@ -307,7 +306,7 @@ final class TCPTransport {
       });
     }
 
-    private void service(final Selector selector) throws IOException {
+    private void service(final Selector selector) throws Exception {
       final ByteBuffer buffer = ByteBuffer.allocate(256);
       while (true) {
         // logger.info("In service");
@@ -401,7 +400,8 @@ final class TCPTransport {
           // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
         }
         logger.info("Closing acceptor on {}", serverChannel.getLocalAddress());
-      } catch (IOException problem) {
+      } catch (Exception problem) {
+        logger.error("Encountered error, exiting service loop", problem);
       }
     }
   }
