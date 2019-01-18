@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +19,7 @@ public final class MemberGroup {
 
   private final List<Member> members = new ArrayList<>();
   private final Id id;
-  private Member leader;
+  private AtomicReference<Member> leader = new AtomicReference<>();
 
   public MemberGroup(final Id id) {
     this.id = id;
@@ -26,6 +27,7 @@ public final class MemberGroup {
 
   // TODO: should be done via broadcast to all members in the group
   public boolean removeMember(final Member member) {
+    logger.info("Removing member {} from group {}", member.getId(), id);
     member.setStatus(Status.DEAD);
     return true;
     // return members.remove(member);
@@ -33,16 +35,17 @@ public final class MemberGroup {
 
   // TODO: should be done via broadcast to all members in the group
   public boolean addMember(final Member member) {
+    logger.info("Adding member {} to group {}", member.getId(), id);
     return members.add(member);
   }
 
   public void setLeader(final Member leader) {
     logger.info("Setting leader {} in group {}", leader.getId(), id);
-    this.leader = leader;
+    this.leader.set(leader);
   }
 
   public Member getLeader() {
-    return leader;
+    return leader.get();
   }
 
   public Member findMember(final Id memberId) {
@@ -96,10 +99,11 @@ public final class MemberGroup {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
+    final String leaderId = leader.get() != null ? leader.get().getId().toString() : null;
+    final StringBuilder builder = new StringBuilder();
     builder.append("MemberGroup [id=").append(id).append(", leader=")
-        .append(leader != null ? leader.getId().toString() : "null").append(", members=")
-        .append(members).append("]");
+        .append(leader != null ? leaderId : "null").append(", members=").append(members)
+        .append("]");
     return builder.toString();
   }
 
