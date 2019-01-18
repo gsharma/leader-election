@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -400,8 +401,10 @@ final class TCPTransport {
           // LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100L));
         }
         logger.info("Closing acceptor on {}", serverChannel.getLocalAddress());
+      } catch (ClosedChannelException channelClosed) {
+        logger.warn("Channel closed, exiting service loop");
       } catch (Exception problem) {
-        logger.error("Encountered error, exiting service loop", problem);
+        logger.warn("Encountered problem, exiting service loop", problem);
       }
     }
   }
