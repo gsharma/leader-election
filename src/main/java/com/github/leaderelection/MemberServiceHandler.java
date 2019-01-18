@@ -10,6 +10,7 @@ import com.github.leaderelection.messages.RequestType;
 import com.github.leaderelection.messages.Response;
 import com.github.leaderelection.messages.SwimFDAckResponse;
 import com.github.leaderelection.messages.MemberFailedMessage;
+import com.github.leaderelection.messages.MemberJoinedMessage;
 import com.github.leaderelection.messages.SwimFDPingProbe;
 import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
@@ -102,6 +103,8 @@ class MemberServiceHandler implements ServiceHandler {
 
         // TODO
         case MEMBER_JOINED: {
+          final MemberJoinedMessage joinedRequest = MemberJoinedMessage.class.cast(request);
+          final Id joinedMemberId = joinedRequest.getSenderId();
           break;
         }
 
