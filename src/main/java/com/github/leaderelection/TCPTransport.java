@@ -191,7 +191,7 @@ final class TCPTransport {
     if (bytesRead == -1) {
       // end of stream
       clientChannel.close();
-      logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+      logger.info("Server closed channel to client");
       return new byte[0];
     }
     // trim to buffer's non-zero bytes
@@ -365,7 +365,7 @@ final class TCPTransport {
             if (bytesRead == -1) {
               clientChannel.close();
               key.cancel();
-              logger.info("Server closed channel to client {}", clientChannel.getRemoteAddress());
+              logger.info("Server closed channel to client");
             }
 
             buffer.flip();
