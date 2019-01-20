@@ -13,7 +13,7 @@ public interface FailureDetector {
 
   boolean tini();
 
-  Assessment assess();
+  Assessment getAssessment();
 
   MemberGroup members();
 

@@ -150,7 +150,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   }
 
   @Override
-  public Assessment assess() {
+  public Assessment getAssessment() {
     // TODO
     return null;
   }

@@ -80,7 +80,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
   }
 
   @Override
-  public Assessment assess() {
+  public Assessment getAssessment() {
     // TODO
     return null;
   }

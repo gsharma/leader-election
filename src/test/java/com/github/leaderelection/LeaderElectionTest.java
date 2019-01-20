@@ -49,7 +49,9 @@ public class LeaderElectionTest {
 
     final Member bully = group.greatestIdMember();
     final LeaderElection election = new BullyLeaderElection(group, bully);
-    final Member leader = election.electLeader();
+    assertNull(election.reportLeader());
+    election.electLeader();
+    final Member leader = election.reportLeader();
     assertEquals(bully, leader);
     assertEquals(bully, group.getLeader());
     for (final Member groupMember : group.allMembers()) {

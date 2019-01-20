@@ -3,6 +3,7 @@ package com.github.leaderelection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,7 @@ public final class BullyLeaderElection implements LeaderElection {
   private final MemberGroup memberGroup;
   private final MemberTransport transport;
   private final Member sourceMember;
+  private final AtomicReference<Member> electedLeader = new AtomicReference<>();
 
   private final AtomicBoolean running = new AtomicBoolean();
 
@@ -36,13 +38,21 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   @Override
-  public synchronized Member electLeader() {
+  public Member reportLeader() {
+    return electedLeader.get();
+  }
+
+  // TODO:
+  // sourceMember.getFailureDetector().getAssessment();
+
+  @Override
+  public synchronized void electLeader() {
     logger.info("Starting a round of leader election at {}", epoch);
 
     Member leader = null;
     if (!running.get()) {
       logger.warn("Cannot elect a leader when leader election is shutdown");
-      return leader;
+      return;
     }
 
     // bump epoch
@@ -70,6 +80,8 @@ public final class BullyLeaderElection implements LeaderElection {
               member.getId(), problem);
         }
       }
+      electedLeader.set(leader);
+      logger.info("Elected leader:{} at {}", leader.getId(), epoch);
     }
     // broadcast election to all greaterIdMembers
     else {
@@ -86,9 +98,6 @@ public final class BullyLeaderElection implements LeaderElection {
         }
       }
     }
-
-    logger.info("Elected leader:{} at {}", leader.getId(), epoch);
-    return leader;
   }
 
   @Override

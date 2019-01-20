@@ -7,7 +7,9 @@ package com.github.leaderelection;
  */
 public interface LeaderElection extends MemberFailureListener {
 
-  Member electLeader();
+  Member reportLeader();
+
+  void electLeader();
 
   void shutdown();
 

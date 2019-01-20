@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.fd.FailureDetector;
 import com.github.leaderelection.fd.SwimFailureDetector;
 import com.github.leaderelection.messages.Request;
 import com.github.leaderelection.messages.Response;
@@ -28,14 +29,13 @@ public final class Member implements Comparable<Member> {
   private final int port;
   private MemberTransport transport;
   private UUID serverTransportId;
+  private final MemberGroup memberGroup;
 
-  private SwimFailureDetector failureDetector;
+  private FailureDetector failureDetector;
 
   // mutables
-  private AtomicReference<Status> status = new AtomicReference<>(Status.UNKNOWN);
+  private final AtomicReference<Status> status = new AtomicReference<>(Status.UNKNOWN);
   private Epoch epoch = new Epoch();
-
-  private final MemberGroup memberGroup;
 
   public Member(final Id id, final String host, final int port, final MemberGroup memberGroup) {
     this.id = id;
@@ -46,6 +46,10 @@ public final class Member implements Comparable<Member> {
 
   public MemberTransport getTransport() {
     return transport;
+  }
+
+  public FailureDetector getFailureDetector() {
+    return failureDetector;
   }
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing
