@@ -2,6 +2,9 @@ package com.github.leaderelection;
 
 import java.util.UUID;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.github.leaderelection.messages.Request;
 import com.github.leaderelection.messages.Response;
 
@@ -12,6 +15,8 @@ import com.github.leaderelection.messages.Response;
  * @author gaurav
  */
 public final class MemberTransport {
+  private static final Logger logger = LogManager.getLogger(MemberTransport.class.getSimpleName());
+
   private final Member sourceMember;
   private final MemberGroup memberGroup;
   private final TCPTransport tcpTransport;
@@ -42,6 +47,10 @@ public final class MemberTransport {
         response = Response.class.cast(InternalLib.deserialize(responseBytes));
         // return InternalLib.getObjectMapper().readValue(responseBytes, Response.class);
       }
+      logger.info("Dispatched {}, received {}", request, response);
+    } else {
+      logger.warn("Cannot dispatch {} to {}:{} with a stopped transport layer", request,
+          destinationMember.getHost(), destinationMember.getPort());
     }
     return response;
   }

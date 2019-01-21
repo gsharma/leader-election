@@ -81,4 +81,12 @@ public final class OkResponse implements Response {
     return true;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append("OkResponse [senderId=").append(senderId).append(", epoch=").append(epoch)
+        .append(", type=").append(type).append("]");
+    return builder.toString();
+  }
+
 }
