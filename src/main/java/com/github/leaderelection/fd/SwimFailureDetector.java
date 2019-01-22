@@ -50,12 +50,14 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public void run() {
-    while (!isInterrupted()) {
+    while (!isInterrupted() && transport.isRunning()) {
       try {
         // no point wasting cycles with only self in the group
         if (memberGroup.allMembers().size() > 1) {
           // select a random member from the group other than the sourceMember
           final Member memberToProbe = selectRandomMember(sourceMember);
+
+          logger.info("Failure detector ready to ping probe {}", memberToProbe.getId());
 
           // send a ping probe to selected member
           final SwimFDPingProbe pingProbe = new SwimFDPingProbe(sourceMemberId, epoch);
@@ -65,7 +67,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
             response = transport.dispatchTo(memberToProbe, pingProbe);
           } catch (Exception problem) {
             // might have shutdown
-            logger.error("Encountered error dispatching ping probe to " + memberToProbe, problem);
+            logger.error("Failure detector encountered error dispatching ping probe to {}",
+                memberToProbe.getId(), problem);
           }
 
           SwimFDAckResponse ackResponse = null;
@@ -74,7 +77,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           }
 
           // say we didn't receive the ackResponse and timed out
-          if (ackResponse == null && transport.isRunning()) {
+          if (ackResponse == null) {
             List<Member> proxyMembers = new ArrayList<>(memberGroup.allMembers());
             proxyMembers.remove(memberToProbe);
             proxyMembers.remove(sourceMember);
@@ -85,16 +88,25 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
             for (final Member proxyMember : proxyMembers) {
               final SwimFDPingRequestProbe pingRequestProbe =
                   new SwimFDPingRequestProbe(sourceMemberId, epoch, memberToProbe.getId());
-              Response proxyResponse = null;
-              try {
-                proxyResponse = transport.dispatchTo(proxyMember, pingRequestProbe);
-                if (proxyResponse != null) {
-                  proxyResponses.add(proxyResponse);
+              for (int iter = 0; iter < 3; iter++) {
+                logger.info("Failure detector dispatching ping-request probe to {}, iter {}",
+                    memberToProbe.getId(), iter);
+                Response proxyResponse = null;
+                try {
+                  proxyResponse = transport.dispatchTo(proxyMember, pingRequestProbe);
+                  if (proxyResponse != null) {
+                    proxyResponses.add(proxyResponse);
+                    break;
+                  } else {
+                    logger.warn("Failure detector failed to ping-request probe {}, iter {}",
+                        memberToProbe.getId(), iter);
+                  }
+                } catch (Exception problem) {
+                  // TODO: handle timeout
+                  logger.error(
+                      "Failure detector encountered error dispatching ping-request probe to {}, iter {}",
+                      proxyMember.getId(), iter, problem);
                 }
-              } catch (Exception problem) {
-                // TODO: handle timeout
-                logger.error("Encountered error trying to dispatch ping-request probe to member:"
-                    + proxyMember.getId(), problem);
               }
             }
 
@@ -110,7 +122,12 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
               }
             }
 
-            if (!receivedAck) {
+            if (receivedAck) {
+              logger.info("Failure detector successfully ping-request probed {}",
+                  memberToProbe.getId());
+            } else {
+              logger.info("Failure detector failed to ping-request probe {}",
+                  memberToProbe.getId());
               proxyMembers = new ArrayList<>(memberGroup.allMembers());
               proxyMembers.remove(memberToProbe);
               final MemberFailedMessage memberFailed = new MemberFailedMessage(sourceMember.getId(),
@@ -119,14 +136,17 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
                 try {
                   Response okResponse = transport.dispatchTo(memberToNotify, memberFailed);
                 } catch (Exception problem) {
-                  logger.error("Encountered error trying to dispatch failed-message to member:"
-                      + memberToNotify.getId(), problem);
+                  logger.error(
+                      "Failure detector encountered error trying to dispatch failed-message to {}",
+                      memberToNotify.getId(), problem);
                 }
               }
             }
+          } else {
+            logger.info("Failure detector successfully probed {}", memberToProbe.getId());
           }
         } else {
-          logger.info("{} Failure detector waiting for other members to join group",
+          logger.info("Failure detector waiting for other members to join group at {}",
               sourceMemberId);
         }
 
@@ -144,8 +164,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
     if (index == memberCount && index > 0) {
       --index;
     }
-    logger.info("{} Selected member at index {} from {} members in group", sourceMemberId, index,
-        memberGroup.allMembers().size());
+    logger.info("Failure detector selected member at index {} from {} members at {}", index,
+        memberGroup.allMembers().size(), sourceMemberId);
     return allMembers.get(index);
   }
 
@@ -157,7 +177,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public boolean init() {
-    logger.info("{} Starting failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("Failure detector starting for {}", sourceMemberId);
     start();
     return true;
   }
@@ -170,9 +190,9 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   @Override
   public boolean tini() {
     // TODO
-    logger.info("{} Stopping failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("Failure detector stopping for {}", sourceMemberId);
     interrupt();
-    logger.info("{} Stopped failure detector for {}", sourceMemberId, sourceMember);
+    logger.info("Failure detector stopped for {}", sourceMemberId);
     return true;
   }
 

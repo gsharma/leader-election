@@ -48,6 +48,7 @@ class MemberServiceHandler implements ServiceHandler {
     Response response = null;
     if (request != null) {
       final RequestType requestType = request.getType();
+      logger.info("Handling {} at {}", requestType, sourceMember.getId());
       switch (requestType) {
         case FD_PING: {
           response = new SwimFDAckResponse(request.getSenderId(), request.getEpoch());
@@ -58,26 +59,30 @@ class MemberServiceHandler implements ServiceHandler {
         case FD_PING_REQUEST: {
           final SwimFDPingRequestProbe pingRequestProbe =
               SwimFDPingRequestProbe.class.cast(request);
-          final Id memberToPing = pingRequestProbe.getMemberToProbe();
-          final Member memberToProbe = memberGroup.findMember(memberToPing);
-          final SwimFDPingProbe pingProbe =
-              new SwimFDPingProbe(sourceMember.getId(), sourceMember.currentEpoch());
-          final byte[] requestPayload = InternalLib.serialize(pingProbe);
-          SwimFDAckResponse pingRequestResponse = null;
-          try {
-            final byte[] responsePayload =
-                transport.send(memberToProbe.getHost(), memberToProbe.getPort(), requestPayload);
-            if (responsePayload != null) {
-              pingRequestResponse =
-                  SwimFDAckResponse.class.cast(InternalLib.deserialize(responsePayload));
+          final Id memberToProbeId = pingRequestProbe.getMemberToProbe();
+          final Member memberToProbe = memberGroup.findMember(memberToProbeId);
+          if (memberToProbe != null) {
+            final SwimFDPingProbe pingProbe =
+                new SwimFDPingProbe(sourceMember.getId(), sourceMember.currentEpoch());
+            final byte[] requestPayload = InternalLib.serialize(pingProbe);
+            SwimFDAckResponse pingRequestResponse = null;
+            try {
+              final byte[] responsePayload =
+                  transport.send(memberToProbe.getHost(), memberToProbe.getPort(), requestPayload);
+              if (responsePayload != null) {
+                pingRequestResponse =
+                    SwimFDAckResponse.class.cast(InternalLib.deserialize(responsePayload));
+              }
+            } catch (Exception problem) {
+              logger.error("Failed in ping-request probe to " + memberToProbe, problem);
             }
-          } catch (Exception problem) {
-            logger.error("Failed in ping-request probe to " + memberToProbe, problem);
-          }
-          if (pingRequestResponse != null) {
-            response = new SwimFDAckResponse(sourceMember.getId(), sourceMember.currentEpoch());
+            if (pingRequestResponse != null) {
+              response = new SwimFDAckResponse(sourceMember.getId(), sourceMember.currentEpoch());
+            } else {
+              // hmm what should we do - possibly nack?
+            }
           } else {
-            // hmm what should we do - possibly nack?
+            logger.warn("Failed to locate {} in {}", memberToProbeId, memberGroup);
           }
           logger.info("Received::{}, Responded with::{}", request, response);
           break;

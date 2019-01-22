@@ -59,6 +59,10 @@ public class LeaderElectionTest {
       // assertEquals(1L, groupMember.currentEpoch().getEpoch());
     }
 
+    assertEquals(Status.ALIVE, memberOne.getStatus());
+    assertEquals(Status.ALIVE, memberTwo.getStatus());
+    assertEquals(Status.ALIVE, memberThree.getStatus());
+    
     election.shutdown();
 
     assertEquals(Status.DEAD, memberOne.getStatus());

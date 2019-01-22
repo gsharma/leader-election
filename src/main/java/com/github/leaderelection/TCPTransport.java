@@ -140,7 +140,7 @@ final class TCPTransport {
           public SocketChannel apply(String key) {
             SocketChannel clientChannel = null;
             try {
-              logger.info("Setting up client channgel to {}:{}", host, port);
+              logger.info("Setting up client channel to {}:{}", host, port);
               clientChannel = SocketChannel.open(new InetSocketAddress(host, port));
               clientChannel.configureBlocking(false);
               final Socket socket = clientChannel.socket();
