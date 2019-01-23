@@ -27,8 +27,8 @@ public final class MemberGroup {
 
   // TODO: should be done via broadcast to all members in the group
   public boolean removeMember(final Member member) {
-    logger.info("Removing member {} from group {}", member.getId(), id);
-    member.setStatus(Status.DEAD);
+    logger.info("Marking member {} DEAD in group {}", member.getId(), id);
+    member.setStatus(MemberStatus.DEAD);
     return true;
     // return members.remove(member);
   }
@@ -55,6 +55,9 @@ public final class MemberGroup {
         member = candidate;
         break;
       }
+    }
+    if (member == null) {
+      logger.warn("Failed to find member {} in group {}", memberId, id);
     }
     return member;
   }

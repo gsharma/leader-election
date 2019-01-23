@@ -34,7 +34,7 @@ public final class Member implements Comparable<Member> {
   private FailureDetector failureDetector;
 
   // mutables
-  private final AtomicReference<Status> status = new AtomicReference<>(Status.UNKNOWN);
+  private final AtomicReference<MemberStatus> status = new AtomicReference<>(MemberStatus.UNKNOWN);
   private Epoch epoch = new Epoch();
 
   public Member(final Id id, final String host, final int port, final MemberGroup memberGroup) {
@@ -57,14 +57,14 @@ public final class Member implements Comparable<Member> {
   public synchronized boolean init() {
     boolean success = false;
     logger.info("Initializing member:{}", id);
-    if (status.get() != Status.ALIVE) {
+    if (status.get() != MemberStatus.ALIVE) {
       try {
         transport = new MemberTransport(this, memberGroup);
         serverTransportId = transport.bindServer(host, port);
         memberGroup.addMember(this);
         failureDetector = new SwimFailureDetector(transport, memberGroup, id, epoch);
         failureDetector.init();
-        setStatus(Status.ALIVE);
+        setStatus(MemberStatus.ALIVE);
         success = true;
       } catch (Exception problem) {
         logger.error("Problem initializing member:" + id, problem);
@@ -79,13 +79,13 @@ public final class Member implements Comparable<Member> {
   // purposes - typically, there will be a single Member instance in a process/thread
   public synchronized void shutdown() {
     // boolean success = false;
-    if (status.get() != Status.DEAD) {
+    if (status.get() != MemberStatus.DEAD) {
       try {
         transport.stopServer(serverTransportId);
         transport.shutdown();
         serverTransportId = null;
         failureDetector.tini();
-        setStatus(Status.DEAD);
+        setStatus(MemberStatus.DEAD);
         // success = true;
         logger.info("Shutdown member:{}", id);
       } catch (Exception problem) {
@@ -117,11 +117,11 @@ public final class Member implements Comparable<Member> {
     return serverTransportId;
   }
 
-  public Status getStatus() {
+  public MemberStatus getStatus() {
     return status.get();
   }
 
-  public void setStatus(final Status status) {
+  public void setStatus(final MemberStatus status) {
     logger.info("Changing member {} status from {} to {}", id, this.status, status);
     this.status.set(status);
   }

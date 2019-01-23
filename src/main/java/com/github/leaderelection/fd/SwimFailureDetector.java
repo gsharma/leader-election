@@ -57,7 +57,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           // select a random member from the group other than the sourceMember
           final Member memberToProbe = selectRandomMember(sourceMember);
 
-          logger.info("Failure detector ready to ping probe {}", memberToProbe.getId());
+          logger.info("Failure detector ready to dispatch ping probe to {}", memberToProbe.getId());
 
           // send a ping probe to selected member
           final SwimFDPingProbe pingProbe = new SwimFDPingProbe(sourceMemberId, epoch);
@@ -98,7 +98,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
                     proxyResponses.add(proxyResponse);
                     break;
                   } else {
-                    logger.warn("Failure detector failed to ping-request probe {}, iter {}",
+                    logger.warn(
+                        "Failure detector failed in dispatching ping-request probe to {}, iter {}",
                         memberToProbe.getId(), iter);
                   }
                 } catch (Exception problem) {
@@ -164,8 +165,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
     if (index == memberCount && index > 0) {
       --index;
     }
-    logger.info("Failure detector selected member at index {} from {} members at {}", index,
-        memberGroup.allMembers().size(), sourceMemberId);
+    logger.info("Failure detector selected member at index {} from {} members at source member {}",
+        index, memberGroup.allMembers().size(), sourceMemberId);
     return allMembers.get(index);
   }
 

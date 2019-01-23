@@ -96,7 +96,7 @@ class MemberServiceHandler implements ServiceHandler {
           final Id failedMemberId = failedRequest.getFailedId();
           final Member failedMember = memberGroup.findMember(failedMemberId);
           if (failedMember != null) {
-            failedMember.setStatus(Status.DEAD);
+            failedMember.setStatus(MemberStatus.DEAD);
           } else {
             logger.warn("Could not locate failed member:{} in group:{}", failedMemberId,
                 memberGroup);
@@ -151,14 +151,18 @@ class MemberServiceHandler implements ServiceHandler {
           // sender is the leader
           final Id leaderId = request.getSenderId();
           final Member leader = memberGroup.findMember(leaderId);
-          while (leader.currentEpoch().after(sourceMember.currentEpoch())) {
-            sourceMember.incrementEpoch();
-          }
           if (leader != null) {
-            logger.info("{} accepted elected leader {}", sourceMember.getId(), leaderId);
-            memberGroup.setLeader(leader);
+            while (leader.currentEpoch().after(sourceMember.currentEpoch())) {
+              sourceMember.incrementEpoch();
+            }
+            if (leader != null) {
+              logger.info("{} accepted elected leader {}", sourceMember.getId(), leaderId);
+              memberGroup.setLeader(leader);
+            }
+            response = new OkResponse(sourceMember.getId(), request.getEpoch());
+          } else {
+            logger.error("Failed to locate leader {} in group {}", leaderId, memberGroup.getId());
           }
-          response = new OkResponse(sourceMember.getId(), request.getEpoch());
           logger.info("Received::{}, Responded with::{}", request, response);
           break;
         }

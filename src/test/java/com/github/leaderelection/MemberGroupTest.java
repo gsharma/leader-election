@@ -26,30 +26,30 @@ public class MemberGroupTest {
     assertNull(memberOne.getServerTransportId());
     memberOne.init();
     assertNotNull(memberOne.getServerTransportId());
-    assertEquals(Status.ALIVE, memberOne.getStatus());
+    assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
 
     final int portTwo = 4004;
     final Member memberTwo = new Member(new RandomId(), host, portTwo, group);
     assertNull(memberTwo.getServerTransportId());
     memberTwo.init();
     assertNotNull(memberTwo.getServerTransportId());
-    assertEquals(Status.ALIVE, memberTwo.getStatus());
+    assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
 
     final int portThree = 4003;
     final Member memberThree = new Member(new RandomId(), host, portThree, group);
     assertNull(memberThree.getServerTransportId());
     memberThree.init();
     assertNotNull(memberThree.getServerTransportId());
-    assertEquals(Status.ALIVE, memberThree.getStatus());
+    assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
 
     Thread.sleep(3_000L);
 
     memberOne.shutdown();
-    assertEquals(Status.DEAD, memberOne.getStatus());
+    assertEquals(MemberStatus.DEAD, memberOne.getStatus());
     memberTwo.shutdown();
-    assertEquals(Status.DEAD, memberTwo.getStatus());
+    assertEquals(MemberStatus.DEAD, memberTwo.getStatus());
     memberThree.shutdown();
-    assertEquals(Status.DEAD, memberThree.getStatus());
+    assertEquals(MemberStatus.DEAD, memberThree.getStatus());
 
     assertFalse(memberOne.getTransport().isRunning());
     assertFalse(memberTwo.getTransport().isRunning());
