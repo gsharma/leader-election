@@ -25,13 +25,6 @@ public class LeaderElectionTest {
 
   @Test
   public void testBullyLeaderElection() throws Exception {
-    List<BufferPoolMXBean> pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
-    for (BufferPoolMXBean pool : pools) {
-      System.out.println("pool:" + pool.getName() + ", count:" + pool.getCount());
-      System.out.println(
-          "memory-used:" + pool.getMemoryUsed() + ", total-capacity:" + pool.getTotalCapacity());
-    }
-
     /**
      * TODO: make this robust enough to be run successfully in a loop - at the moment, we're crappy
      * and sometimes tend to balk after the first iteration itself
@@ -73,6 +66,7 @@ public class LeaderElectionTest {
       try {
         final Member bully = group.greatestIdMember();
         election = new BullyLeaderElection(group, bully);
+        assertTrue(election.isRunning());
         assertNull(election.reportLeader());
         election.electLeader();
         final Member leader = election.reportLeader();
@@ -90,6 +84,7 @@ public class LeaderElectionTest {
       } finally {
         if (election != null) {
           election.shutdown();
+          assertFalse(election.isRunning());
 
           assertEquals(MemberStatus.DEAD, memberOne.getStatus());
           assertEquals(MemberStatus.DEAD, memberTwo.getStatus());

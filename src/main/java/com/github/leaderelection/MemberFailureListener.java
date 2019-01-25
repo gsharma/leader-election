@@ -7,6 +7,6 @@ package com.github.leaderelection;
  */
 public interface MemberFailureListener {
 
-  void notifyMemberFailed(Id failedMemberId);
+  void notifyMemberFailed(Id failedMemberId) throws LeaderElectionException;
 
 }

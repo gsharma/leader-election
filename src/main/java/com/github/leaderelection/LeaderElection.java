@@ -9,7 +9,9 @@ public interface LeaderElection extends MemberFailureListener {
 
   Member reportLeader();
 
-  void electLeader();
+  void electLeader() throws LeaderElectionException;
+
+  boolean isRunning();
 
   void shutdown();
 

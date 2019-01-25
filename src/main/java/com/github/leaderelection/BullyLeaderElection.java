@@ -46,7 +46,7 @@ public final class BullyLeaderElection implements LeaderElection {
   // sourceMember.getFailureDetector().getAssessment();
 
   @Override
-  public synchronized void electLeader() {
+  public synchronized void electLeader() throws LeaderElectionException {
     logger.info("Starting a round of leader election at {}", epoch);
 
     Member leader = null;
@@ -101,6 +101,11 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   @Override
+  public boolean isRunning() {
+    return running.get();
+  }
+
+  @Override
   public synchronized void shutdown() {
     if (running.compareAndSet(true, false)) {
       for (final Member member : memberGroup.allMembers()) {
@@ -121,7 +126,7 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   @Override
-  public void notifyMemberFailed(final Id failedMemberId) {
+  public void notifyMemberFailed(final Id failedMemberId) throws LeaderElectionException {
     logger.info("Received failure notification for memberId:{}", failedMemberId);
     electLeader();
   }
