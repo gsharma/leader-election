@@ -6,10 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.management.BufferPoolMXBean;
-import java.lang.management.ManagementFactory;
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
@@ -31,56 +27,75 @@ public class LeaderElectionTest {
      */
     int port = 4003;
     for (int iter = 0; iter < 1; iter++) {
-      logger.info("begin iteration {}", iter);
-      final MemberGroup group = new MemberGroup(new RandomId());
-      final String host = "localhost";
-
-      final int portOne = port++;
-      final Member memberOne = new Member(new RandomId(), host, portOne, group);
-      assertNull(memberOne.getServerTransportId());
-      assertTrue(memberOne.init());
-      assertNotNull(memberOne.getServerTransportId());
-      assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
-
-      final int portTwo = port++;
-      final Member memberTwo = new Member(new RandomId(), host, portTwo, group);
-      assertNull(memberTwo.getServerTransportId());
-      assertTrue(memberTwo.init());
-      assertNotNull(memberTwo.getServerTransportId());
-      assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
-
-      final int portThree = port++;
-      final Member memberThree = new Member(new RandomId(), host, portThree, group);
-      assertNull(memberThree.getServerTransportId());
-      assertTrue(memberThree.init());
-      assertNotNull(memberThree.getServerTransportId());
-      assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
-
-      for (final Member groupMember : group.allMembers()) {
-        assertEquals(0L, groupMember.currentEpoch().getEpoch());
-      }
-
-      Thread.sleep(3_000L);
-
       LeaderElection election = null;
+      Member memberOne = null, memberTwo = null, memberThree = null;
       try {
-        final Member bully = group.greatestIdMember();
-        election = new BullyLeaderElection(group, bully);
-        assertTrue(election.isRunning());
-        assertNull(election.reportLeader());
-        election.electLeader();
-        final Member leader = election.reportLeader();
-        assertEquals(bully, leader);
-        assertEquals(bully, group.getLeader());
-        for (final Member groupMember : group.allMembers()) {
-          // TODO
-          // assertEquals(1L, groupMember.currentEpoch().getEpoch());
-        }
+        long expectedEpoch = 0L;
+        final MemberGroup group = new MemberGroup(new RandomId());
+        final String host = "localhost";
 
+        final int portOne = port++;
+        memberOne = new Member(new RandomId(), host, portOne, group);
+        assertNull(memberOne.getServerTransportId());
+        assertTrue(memberOne.init());
+        assertNotNull(memberOne.getServerTransportId());
         assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
+
+        final int portTwo = port++;
+        memberTwo = new Member(new RandomId(), host, portTwo, group);
+        assertNull(memberTwo.getServerTransportId());
+        assertTrue(memberTwo.init());
+        assertNotNull(memberTwo.getServerTransportId());
         assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
+
+        final int portThree = port++;
+        memberThree = new Member(new RandomId(), host, portThree, group);
+        assertNull(memberThree.getServerTransportId());
+        assertTrue(memberThree.init());
+        assertNotNull(memberThree.getServerTransportId());
         assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
 
+        for (final Member groupMember : group.allMembers()) {
+          assertEquals(expectedEpoch, groupMember.currentEpoch().getEpoch());
+        }
+
+        Thread.sleep(3_000L);
+
+        Member bully = group.greatestIdMember();
+        election = new BullyLeaderElection(group, bully);
+
+        Member previousLeader = null;
+        for (int bullyIter = 0; bullyIter < 2; bullyIter++) {
+          logger.info("Begin election iter {}", bullyIter);
+
+          assertTrue(election.isRunning());
+          if (bullyIter > 0) {
+            assertNotNull(election.reportLeader());
+          } else {
+            assertNull(election.reportLeader());
+          }
+          assertEquals(expectedEpoch, election.reportEpoch().getEpoch());
+          election.electLeader();
+          final Member leader = election.reportLeader();
+          bully = group.greatestIdMember();
+          assertEquals(bully, leader);
+          assertEquals(bully, group.getLeader());
+          assertEquals(++expectedEpoch, election.reportEpoch().getEpoch());
+          // in the absence of leader death or reachability, validate that the bully never ever
+          // loses its leadership despite repeated rounds of voting
+          if (previousLeader != null) {
+            assertEquals(previousLeader, leader);
+          }
+          for (final Member groupMember : group.allMembers()) {
+            // TODO
+            // assertEquals(1L, groupMember.currentEpoch().getEpoch());
+          }
+
+          assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
+          assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
+          assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
+          logger.info("Finish election iter {}", bullyIter);
+        }
       } finally {
         if (election != null) {
           election.shutdown();
@@ -95,7 +110,7 @@ public class LeaderElectionTest {
           assertFalse(memberThree.getTransport().isRunning());
         }
         Thread.sleep(500L);
-        logger.info("finish iteration {}", iter);
+        logger.info("Finish overall iter {}", iter);
       }
     }
   }

@@ -106,7 +106,7 @@ public final class Member implements Comparable<Member> {
     long previous = epoch.getEpoch();
     epoch = epoch.increment();
     long current = epoch.getEpoch();
-    logger.info("Member {} epoch incr {}->{}", id, previous, current);
+    logger.info("Member {} epoch incr:{}->{}", id, previous, current);
   }
 
   public Epoch currentEpoch() {

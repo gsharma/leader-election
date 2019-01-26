@@ -9,6 +9,8 @@ public interface LeaderElection extends MemberFailureListener {
 
   Member reportLeader();
 
+  Epoch reportEpoch();
+
   void electLeader() throws LeaderElectionException;
 
   boolean isRunning();

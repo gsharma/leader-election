@@ -38,6 +38,11 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   @Override
+  public Epoch reportEpoch() {
+    return epoch;
+  }
+
+  @Override
   public Member reportLeader() {
     return electedLeader.get();
   }
@@ -107,6 +112,7 @@ public final class BullyLeaderElection implements LeaderElection {
 
   @Override
   public synchronized void shutdown() {
+    logger.info("Shutting down leader election at {}", epoch);
     if (running.compareAndSet(true, false)) {
       for (final Member member : memberGroup.allMembers()) {
         member.shutdown();
