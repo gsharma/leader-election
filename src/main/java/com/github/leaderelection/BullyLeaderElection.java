@@ -122,7 +122,10 @@ public final class BullyLeaderElection implements LeaderElection {
   }
 
   private void incrementEpoch() {
+    long previousEpoch = epoch.getEpoch();
     epoch = epoch.increment();
+    long currentEpoch = epoch.getEpoch();
+    logger.info("Epoch incr:{}->{}", previousEpoch, currentEpoch);
   }
 
   @Override
