@@ -40,3 +40,4 @@ When a process P recovers from failure, or the failure detector indicates that t
 10. Satisfying assumption #5: Blocking I/O is used in conjunction with TCP as the transport.
 
 <this is a work in progress>
+

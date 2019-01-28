@@ -3,6 +3,7 @@ package com.github.leaderelection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.messages.CoordinatorRequest;
 import com.github.leaderelection.messages.ElectionRequest;
 import com.github.leaderelection.messages.OkResponse;
 import com.github.leaderelection.messages.Request;
@@ -149,10 +150,13 @@ class MemberServiceHandler implements ServiceHandler {
 
         case COORDINATOR: {
           // sender is the leader
+          final CoordinatorRequest coordinatorRequest = CoordinatorRequest.class.cast(request);
           final Id leaderId = request.getSenderId();
           final Member leader = memberGroup.findMember(leaderId);
           if (leader != null) {
-            while (leader.currentEpoch().after(sourceMember.currentEpoch())) {
+            logger.info("Received coordinator message, leader epoch:{}, sourceMember epoch:{}",
+                coordinatorRequest.getEpoch().getEpoch(), sourceMember.currentEpoch().getEpoch());
+            while (coordinatorRequest.getEpoch().after(sourceMember.currentEpoch())) {
               sourceMember.incrementEpoch();
             }
             if (leader != null) {

@@ -87,8 +87,7 @@ public class LeaderElectionTest {
             assertEquals(previousLeader, leader);
           }
           for (final Member groupMember : group.allMembers()) {
-            // TODO
-            // assertEquals(1L, groupMember.currentEpoch().getEpoch());
+            assertEquals(expectedEpoch, groupMember.currentEpoch().getEpoch());
           }
 
           assertEquals(MemberStatus.ALIVE, memberOne.getStatus());

@@ -69,6 +69,9 @@ public final class BullyLeaderElection implements LeaderElection {
     // sourceMember has the highest id - grab and announce leadership
     if (greaterIdMembers.isEmpty()) {
       leader = sourceMember;
+      while (this.epoch.after(leader.currentEpoch())) {
+        leader.incrementEpoch();
+      }
       memberGroup.setLeader(leader);
 
       final CoordinatorRequest victoryMessage = new CoordinatorRequest(sourceMember.getId(), epoch);
