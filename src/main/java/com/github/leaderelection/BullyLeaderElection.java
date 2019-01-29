@@ -78,14 +78,23 @@ public final class BullyLeaderElection implements LeaderElection {
 
       for (final Member member : otherMembers(memberGroup, sourceMember)) {
         logger.info("Announcing leader:{} to {} at {}", leader.getId(), member.getId(), epoch);
-        while (leader.currentEpoch().after(member.currentEpoch())) {
-          member.incrementEpoch();
+        boolean successfulDispatch = false;
+        for (int iter = 0; iter < 3; iter++) {
+          try {
+            Response response = transport.dispatchTo(member, victoryMessage);
+            while (leader.currentEpoch().after(member.currentEpoch())) {
+              member.incrementEpoch();
+            }
+            successfulDispatch = true;
+            break;
+          } catch (Exception problem) {
+            logger.error("Problem encountered dispatching victory message to member:{}, iter:{}",
+                member.getId(), iter, problem);
+          }
         }
-        try {
-          Response response = transport.dispatchTo(member, victoryMessage);
-        } catch (Exception problem) {
-          logger.error("Problem encountered dispatching victory message to member:{}",
-              member.getId(), problem);
+        if (!successfulDispatch) {
+          logger.error("Failed to successfully dispatch victory message to member:{}",
+              member.getId());
         }
       }
       electedLeader.set(leader);
