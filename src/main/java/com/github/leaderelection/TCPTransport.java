@@ -168,7 +168,7 @@ final class TCPTransport {
     }
 
     // wait a tiny while for the server to respond; hmm but this is just dumb
-    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(1000L));
+    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(500L));
 
     final byte[] serverResponse = read(clientChannel);
 
