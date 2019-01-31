@@ -2,6 +2,7 @@ package com.github.leaderelection.fd;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,8 @@ import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 public final class SwimFailureDetector extends Thread implements FailureDetector {
   private static final Logger logger =
       LogManager.getLogger(SwimFailureDetector.class.getSimpleName());
+
+  private final AtomicReference<Assessment> assessmentRef = new AtomicReference<>();
 
   private final MemberTransport transport;
   private final MemberGroup memberGroup;
@@ -154,6 +157,8 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
         sleep(protocolIntervalMillis);
       } catch (InterruptedException interrupted) {
       }
+
+      // TODO: hydrate assessment
     }
   }
 
@@ -173,7 +178,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   @Override
   public Assessment getAssessment() {
     // TODO
-    return null;
+    return assessmentRef.get();
   }
 
   @Override
