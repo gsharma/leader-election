@@ -68,6 +68,12 @@ public final class BullyLeaderElection implements LeaderElection {
 
     // sourceMember has the highest id - grab and announce leadership
     if (greaterIdMembers.isEmpty()) {
+      if (sourceMember.getStatus() != MemberStatus.ALIVE) {
+        logger.warn(
+            "Failed round of leader election having encountered a non-alive leadership candidate: {}",
+            sourceMember);
+        return;
+      }
       leader = sourceMember;
       while (this.epoch.after(leader.currentEpoch())) {
         leader.incrementEpoch();
