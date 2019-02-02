@@ -1,7 +1,9 @@
 package com.github.leaderelection.fd;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +13,7 @@ import com.github.leaderelection.Epoch;
 import com.github.leaderelection.Id;
 import com.github.leaderelection.Member;
 import com.github.leaderelection.MemberGroup;
+import com.github.leaderelection.MemberStatus;
 import com.github.leaderelection.MemberTransport;
 import com.github.leaderelection.messages.MemberFailedMessage;
 import com.github.leaderelection.messages.Response;
@@ -53,7 +56,10 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public void run() {
+    final Map<Id, MemberStatus> memberStatuses = new HashMap<>();
     while (!isInterrupted() && transport.isRunning()) {
+      final Assessment assessment = new Assessment(sourceMemberId, epoch, memberStatuses);
+      memberStatuses.put(sourceMemberId, MemberStatus.ALIVE);
       try {
         // no point wasting cycles with only self in the group
         if (memberGroup.allMembers().size() > 1) {
@@ -77,6 +83,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           SwimFDAckResponse ackResponse = null;
           if (response != null && response.getType() == ResponseType.ACK) {
             ackResponse = (SwimFDAckResponse) response;
+            memberStatuses.put(memberToProbe.getId(), MemberStatus.ALIVE);
           }
 
           // say we didn't receive the ackResponse and timed out
@@ -99,8 +106,10 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
                   proxyResponse = transport.dispatchTo(proxyMember, pingRequestProbe);
                   if (proxyResponse != null) {
                     proxyResponses.add(proxyResponse);
+                    memberStatuses.put(memberToProbe.getId(), MemberStatus.ALIVE);
                     break;
                   } else {
+                    memberStatuses.put(memberToProbe.getId(), MemberStatus.DEAD);
                     logger.warn(
                         "Failure detector failed in dispatching ping-request probe to {}, iter {}",
                         memberToProbe.getId(), iter);
@@ -134,6 +143,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
                   memberToProbe.getId());
               proxyMembers = new ArrayList<>(memberGroup.allMembers());
               proxyMembers.remove(memberToProbe);
+              memberStatuses.put(memberToProbe.getId(), MemberStatus.DEAD);
               final MemberFailedMessage memberFailed = new MemberFailedMessage(sourceMember.getId(),
                   memberToProbe.currentEpoch(), memberToProbe.getId());
               for (final Member memberToNotify : proxyMembers) {
@@ -154,11 +164,14 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
               sourceMemberId);
         }
 
+        logger.info("Failure detector {}", assessment);
+
+        // hydrate assessment
+        assessmentRef.set(assessment);
+
         sleep(protocolIntervalMillis);
       } catch (InterruptedException interrupted) {
       }
-
-      // TODO: hydrate assessment
     }
   }
 
@@ -177,7 +190,6 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public Assessment getAssessment() {
-    // TODO
     return assessmentRef.get();
   }
 

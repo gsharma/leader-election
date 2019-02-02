@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.github.leaderelection.fd.Assessment;
 import com.github.leaderelection.fd.FailureDetector;
 import com.github.leaderelection.fd.SwimFailureDetector;
 import com.github.leaderelection.messages.Request;
@@ -48,8 +49,8 @@ public final class Member implements Comparable<Member> {
     return transport;
   }
 
-  public FailureDetector getFailureDetector() {
-    return failureDetector;
+  public Assessment getFailureAssessment() {
+    return failureDetector != null ? failureDetector.getAssessment() : null;
   }
 
   // lifecycle methods should not all be invoked on the same process/thread unless it is for testing

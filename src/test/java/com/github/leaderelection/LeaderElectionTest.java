@@ -64,6 +64,8 @@ public class LeaderElectionTest {
         Member bully = group.greatestIdMember();
         election = new BullyLeaderElection(group, bully);
 
+        // TODO: bully.getFailureAssessment();
+
         Member previousLeader = null;
         for (int bullyIter = 0; bullyIter < 2; bullyIter++) {
           logger.info("Begin election iter {}", bullyIter);
