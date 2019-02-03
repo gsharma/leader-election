@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
@@ -95,10 +97,17 @@ public class LeaderElectionTest {
           assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
           assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
           assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
+
+          // ensure that fd assessment is consistent
+          for (Map.Entry<Id, MemberStatus> statusEntry : bully.getFailureAssessment()
+              .getMemberStatuses().entrySet()) {
+            assertEquals(MemberStatus.ALIVE, statusEntry.getValue());
+          }
           logger.info("Finish election iter {}", bullyIter);
         }
       } finally {
         if (election != null) {
+          // Thread.sleep(5000L);
           election.shutdown();
           assertFalse(election.isRunning());
 

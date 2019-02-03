@@ -22,7 +22,7 @@ public final class Assessment {
       final Map<Id, MemberStatus> memberStatuses) {
     this.sourceMemberId = sourceMemberId;
     this.epoch = epoch;
-    if (memberStatuses != null && !memberStatuses.isEmpty()) {
+    if (memberStatuses != null) {
       this.memberStatuses.putAll(memberStatuses);
     }
   }

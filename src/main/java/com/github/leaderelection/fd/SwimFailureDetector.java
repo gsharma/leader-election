@@ -41,7 +41,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   private final Epoch epoch;
 
   // the protocol period needs to be at least 3x the RTT estimate
-  private long protocolIntervalMillis = 9_000L;
+  private long protocolIntervalMillis = 3_000L;
 
   public SwimFailureDetector(final MemberTransport transport, final MemberGroup memberGroup,
       final Id sourceMemberId, final Epoch epoch) {
@@ -83,7 +83,6 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
           SwimFDAckResponse ackResponse = null;
           if (response != null && response.getType() == ResponseType.ACK) {
             ackResponse = (SwimFDAckResponse) response;
-            memberStatuses.put(memberToProbe.getId(), MemberStatus.ALIVE);
           }
 
           // say we didn't receive the ackResponse and timed out
@@ -136,6 +135,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
             }
 
             if (receivedAck) {
+              memberStatuses.put(memberToProbe.getId(), MemberStatus.ALIVE);
               logger.info("Failure detector successfully ping-request probed {}",
                   memberToProbe.getId());
             } else {
@@ -157,6 +157,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
               }
             }
           } else {
+            memberStatuses.put(memberToProbe.getId(), MemberStatus.ALIVE);
             logger.info("Failure detector successfully probed {}", memberToProbe.getId());
           }
         } else {
