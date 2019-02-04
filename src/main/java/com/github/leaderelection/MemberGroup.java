@@ -5,9 +5,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.github.leaderelection.messages.MemberFailedMessage;
+import com.github.leaderelection.messages.Response;
 
 /**
  * A group of members that together form a cluster. For the purposes
@@ -17,6 +21,8 @@ import org.apache.logging.log4j.Logger;
 public final class MemberGroup {
   private static final Logger logger = LogManager.getLogger(MemberGroup.class.getSimpleName());
 
+  private final ReentrantReadWriteLock groupLock = new ReentrantReadWriteLock(true);
+
   private final List<Member> members = new ArrayList<>();
   private final Id id;
   private AtomicReference<Member> leader = new AtomicReference<>();
@@ -25,23 +31,60 @@ public final class MemberGroup {
     this.id = id;
   }
 
-  // TODO: should be done via broadcast to all members in the group
   public boolean removeMember(final Member member) {
-    logger.info("Marking member {} DEAD in group {}", member.getId(), id);
-    member.setStatus(MemberStatus.DEAD);
-    return true;
+    boolean success = false;
+    if (groupLock.writeLock().tryLock()) {
+      try {
+        if (members.contains(member)) {
+          member.setStatus(MemberStatus.DEAD);
+          final List<Member> allOtherMembers = new ArrayList<>(members);
+          allOtherMembers.remove(member);
+          MemberFailedMessage failed =
+              new MemberFailedMessage(null, member.currentEpoch(), member.getId());
+          for (final Member toRemoveFrom : allOtherMembers) {
+            try {
+              Response response = member.getTransport().dispatchTo(toRemoveFrom, failed);
+            } catch (Exception problem) {
+              logger.error("Problem encountered dispatching member failed message to member:{}",
+                  toRemoveFrom.getId(), problem);
+            }
+          }
+          success = true;
+        }
+      } finally {
+        groupLock.writeLock().unlock();
+      }
+    }
+    logger.info("Marked member {} DEAD in group {}, success:{}", member.getId(), id, success);
+    return success;
     // return members.remove(member);
   }
 
   // TODO: should be done via broadcast to all members in the group
   public boolean addMember(final Member member) {
-    logger.info("Adding member {} to group {}", member.getId(), id);
-    return members.add(member);
+    boolean success = false;
+    if (groupLock.writeLock().tryLock()) {
+      try {
+        if (!members.contains(member)) {
+          members.add(member);
+          success = true;
+        }
+      } finally {
+        groupLock.writeLock().unlock();
+      }
+    }
+    logger.info("Added member {} to group {}, success:{}", member.getId(), id, success);
+    return success;
   }
 
-  public void setLeader(final Member leader) {
-    logger.info("Setting leader {} in group {}", leader.getId(), id);
-    this.leader.set(leader);
+  public boolean setLeader(final Member leader) {
+    boolean success = false;
+    if (members.contains(leader)) {
+      this.leader.set(leader);
+      success = true;
+    }
+    logger.info("Set leader {} in group {}, success:{}", leader.getId(), id, success);
+    return success;
   }
 
   public Member getLeader() {
@@ -50,14 +93,20 @@ public final class MemberGroup {
 
   public Member findMember(final Id memberId) {
     Member member = null;
-    for (final Member candidate : allMembers()) {
-      if (candidate.getId().equals(memberId)) {
-        member = candidate;
-        break;
+    if (groupLock.readLock().tryLock()) {
+      try {
+        for (final Member candidate : allMembers()) {
+          if (candidate.getId().equals(memberId)) {
+            member = candidate;
+            break;
+          }
+        }
+        if (member == null) {
+          logger.warn("Failed to find member {} in group {}", memberId, id);
+        }
+      } finally {
+        groupLock.readLock().unlock();
       }
-    }
-    if (member == null) {
-      logger.warn("Failed to find member {} in group {}", memberId, id);
     }
     return member;
   }
@@ -72,9 +121,15 @@ public final class MemberGroup {
 
   public List<Member> largerMembers(final Member member) {
     final List<Member> largerMembers = new ArrayList<>();
-    for (final Member otherMember : allMembers()) {
-      if (member.compareTo(otherMember) < 0) {
-        largerMembers.add(otherMember);
+    if (groupLock.readLock().tryLock()) {
+      try {
+        for (final Member otherMember : allMembers()) {
+          if (member.compareTo(otherMember) < 0) {
+            largerMembers.add(otherMember);
+          }
+        }
+      } finally {
+        groupLock.readLock().unlock();
       }
     }
     return largerMembers;
@@ -82,22 +137,36 @@ public final class MemberGroup {
 
   public List<Member> smallerMembers(final Member member) {
     final List<Member> smallerMembers = new ArrayList<>();
-    for (final Member otherMember : allMembers()) {
-      if (member.compareTo(otherMember) > 0) {
-        smallerMembers.add(otherMember);
+    if (groupLock.readLock().tryLock()) {
+      try {
+        for (final Member otherMember : allMembers()) {
+          if (member.compareTo(otherMember) > 0) {
+            smallerMembers.add(otherMember);
+          }
+        }
+      } finally {
+        groupLock.readLock().unlock();
       }
     }
     return smallerMembers;
   }
 
   public Member greatestIdMember() {
-    Collections.sort(members, new Comparator<Member>() {
-      @Override
-      public int compare(Member one, Member two) {
-        return one.compareTo(two);
+    Member greatestIdMember = null;
+    if (groupLock.readLock().tryLock()) {
+      try {
+        Collections.sort(members, new Comparator<Member>() {
+          @Override
+          public int compare(Member one, Member two) {
+            return one.compareTo(two);
+          }
+        });
+        greatestIdMember = members.get(members.size() - 1);
+      } finally {
+        groupLock.readLock().unlock();
       }
-    });
-    return members.get(members.size() - 1);
+    }
+    return greatestIdMember;
   }
 
   @Override
