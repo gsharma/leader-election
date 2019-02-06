@@ -100,7 +100,7 @@ public final class MemberFailedMessage implements Request {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append("MemberFailedMessage [senderId=").append(senderId).append(", epoch=")
-        .append(epoch).append(", type=").append(", failedId=").append(failedId).append(type)
+        .append(epoch).append(", type=").append(type).append(", failedId=").append(failedId)
         .append("]");
     return builder.toString();
   }

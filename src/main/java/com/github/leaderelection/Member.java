@@ -123,8 +123,12 @@ public final class Member implements Comparable<Member> {
   }
 
   public void setStatus(final MemberStatus status) {
-    logger.info("Changing member {} status from {} to {}", id, this.status, status);
-    this.status.set(status);
+    if (this.status.get() != status) {
+      logger.info("Changing member {} status from {} to {}", id, this.status, status);
+      this.status.set(status);
+    } else {
+      logger.info("Cannot change member {} already in status {}", id, this.status);
+    }
   }
 
   public Id getId() {

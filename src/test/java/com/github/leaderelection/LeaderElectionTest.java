@@ -193,7 +193,8 @@ public class LeaderElectionTest {
       logger.info("Finish election");
 
       // TODO: remove a member from group
-
+      assertTrue(group.removeMember(memberOne));
+      assertEquals(MemberStatus.DEAD, memberOne.getStatus());
     } finally {
       if (election != null) {
         // Thread.sleep(5000L);

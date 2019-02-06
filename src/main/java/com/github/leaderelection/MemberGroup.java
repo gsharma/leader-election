@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -23,7 +24,7 @@ public final class MemberGroup {
 
   private final ReentrantReadWriteLock groupLock = new ReentrantReadWriteLock(true);
 
-  private final List<Member> members = new ArrayList<>();
+  private final List<Member> members = new CopyOnWriteArrayList<>();
   private final Id id;
   private AtomicReference<Member> leader = new AtomicReference<>();
 
@@ -54,6 +55,8 @@ public final class MemberGroup {
       } finally {
         groupLock.writeLock().unlock();
       }
+    } else {
+      logger.warn("Failed to acquire writeLock for removeMember({})", member.getId().getId());
     }
     logger.info("Marked member {} DEAD in group {}, success:{}", member.getId(), id, success);
     return success;
@@ -72,6 +75,8 @@ public final class MemberGroup {
       } finally {
         groupLock.writeLock().unlock();
       }
+    } else {
+      logger.warn("Failed to acquire writeLock for addMember({})", member.getId().getId());
     }
     logger.info("Added member {} to group {}, success:{}", member.getId(), id, success);
     return success;
@@ -93,21 +98,28 @@ public final class MemberGroup {
 
   public Member findMember(final Id memberId) {
     Member member = null;
-    if (groupLock.readLock().tryLock()) {
-      try {
-        for (final Member candidate : allMembers()) {
-          if (candidate.getId().equals(memberId)) {
-            member = candidate;
-            break;
-          }
-        }
-        if (member == null) {
-          logger.warn("Failed to find member {} in group {}", memberId, id);
-        }
-      } finally {
-        groupLock.readLock().unlock();
+    // if (groupLock.readLock().tryLock()) {
+    // try {
+    for (final Member candidate : allMembers()) {
+      if (candidate.getId().equals(memberId)) {
+        member = candidate;
+        break;
       }
     }
+    if (member == null) {
+      logger.warn("Failed to find member {} in group {}", memberId, id);
+    } else {
+      // TODO: should be logged at debug level
+      logger.info("Located member {} in group {}", memberId, id);
+    }
+    // } finally {
+    // groupLock.readLock().unlock();
+    // }
+    // } else {
+    // logger.warn("Failed to acquire readLock for findMember({}), writeLocked:{},
+    // readLockCount:{}",
+    // memberId.getId(), groupLock.isWriteLocked(), groupLock.getReadLockCount());
+    // }
     return member;
   }
 
@@ -131,6 +143,8 @@ public final class MemberGroup {
       } finally {
         groupLock.readLock().unlock();
       }
+    } else {
+      logger.warn("Failed to acquire readLock for largerMembers({})", member.getId().getId());
     }
     return largerMembers;
   }
@@ -147,6 +161,8 @@ public final class MemberGroup {
       } finally {
         groupLock.readLock().unlock();
       }
+    } else {
+      logger.warn("Failed to acquire readLock for smallerMembers({})", member.getId().getId());
     }
     return smallerMembers;
   }
@@ -165,6 +181,8 @@ public final class MemberGroup {
       } finally {
         groupLock.readLock().unlock();
       }
+    } else {
+      logger.warn("Failed to acquire readLock for greatestIdMember");
     }
     return greatestIdMember;
   }
