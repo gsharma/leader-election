@@ -127,7 +127,7 @@ public class LeaderElectionTest {
 
   @Test
   public void testMembershipChange() throws Exception {
-    int port = 5003;
+    int port = 2003;
     LeaderElection election = null;
     Member memberOne = null, memberTwo = null, memberThree = null;
     try {
