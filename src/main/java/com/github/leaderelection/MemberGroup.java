@@ -167,6 +167,12 @@ public final class MemberGroup {
     return smallerMembers;
   }
 
+  public List<Member> otherMembers(final Member member) {
+    final List<Member> otherMembers = new ArrayList<>(members);
+    otherMembers.remove(member);
+    return otherMembers;
+  }
+
   public Member greatestIdMember() {
     Member greatestIdMember = null;
     if (groupLock.readLock().tryLock()) {

@@ -82,7 +82,7 @@ public final class BullyLeaderElection implements LeaderElection {
 
       final CoordinatorRequest victoryMessage = new CoordinatorRequest(sourceMember.getId(), epoch);
 
-      for (final Member member : otherMembers(memberGroup, sourceMember)) {
+      for (final Member member : memberGroup.otherMembers(sourceMember)) {
         logger.info("Announcing leader:{} to {} at {}", leader.getId(), member.getId(), epoch);
         boolean successfulDispatch = false;
         for (int iter = 0; iter < 3; iter++) {
@@ -136,13 +136,6 @@ public final class BullyLeaderElection implements LeaderElection {
         member.shutdown();
       }
     }
-  }
-
-  private static List<Member> otherMembers(final MemberGroup memberGroup,
-      final Member sourceMember) {
-    final List<Member> otherMembers = new ArrayList<>(memberGroup.allMembers());
-    otherMembers.remove(sourceMember);
-    return otherMembers;
   }
 
   private void incrementEpoch() {
