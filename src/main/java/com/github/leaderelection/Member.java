@@ -57,7 +57,7 @@ public final class Member implements Comparable<Member> {
   // purposes - typically, there will be a single Member instance in a process/thread
   public synchronized boolean init() {
     boolean success = false;
-    logger.info("Initializing member:{}", id);
+    logger.info("Initializing member {}:{} {}", host, port, id);
     if (status.get() != MemberStatus.ALIVE) {
       try {
         transport = new MemberTransport(this, memberGroup);
@@ -68,10 +68,10 @@ public final class Member implements Comparable<Member> {
         setStatus(MemberStatus.ALIVE);
         success = true;
       } catch (Exception problem) {
-        logger.error("Problem initializing member:" + id, problem);
+        logger.error("Problem initializing member {}:{} {}", host, port, id, problem);
       }
     } else {
-      logger.info("Cannot re-init an already alive member");
+      logger.info("Cannot re-init an already alive member {}:{} {}", host, port, id);
     }
     return success;
   }
@@ -80,20 +80,16 @@ public final class Member implements Comparable<Member> {
   // purposes - typically, there will be a single Member instance in a process/thread
   public synchronized void shutdown() {
     // boolean success = false;
-    if (status.get() != MemberStatus.DEAD) {
-      try {
-        transport.stopServer(serverTransportId);
-        transport.shutdown();
-        serverTransportId = null;
-        failureDetector.tini();
-        setStatus(MemberStatus.DEAD);
-        // success = true;
-        logger.info("Shutdown member:{}", id);
-      } catch (Exception problem) {
-        logger.error("Problem shutting down member:" + id, problem);
-      }
-    } else {
-      logger.info("Cannot shutdown an already dead member");
+    try {
+      transport.stopServer(serverTransportId);
+      transport.shutdown();
+      serverTransportId = null;
+      failureDetector.tini();
+      setStatus(MemberStatus.DEAD);
+      // success = true;
+      logger.info("Shutdown member {}:{} {}", host, port, id);
+    } catch (Exception problem) {
+      logger.error("Problem shutting down member {}:{} {}", host, port, id, problem);
     }
     // return success;
   }

@@ -45,17 +45,19 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   public SwimFailureDetector(final MemberTransport transport, final MemberGroup memberGroup,
       final Id sourceMemberId, final Epoch epoch) {
-    setName("failure-detector");
     setDaemon(true);
     this.transport = transport;
     this.memberGroup = memberGroup;
     this.sourceMemberId = sourceMemberId;
     this.epoch = epoch;
     this.sourceMember = memberGroup.findMember(sourceMemberId);
+    setName("fd-" + sourceMember.getPort());
   }
 
   @Override
   public void run() {
+    logger.info("Failure detector starting for {}:{} {}", sourceMember.getHost(),
+        sourceMember.getPort(), sourceMemberId);
     final Map<Id, MemberStatus> memberStatuses = new HashMap<>();
     while (!isInterrupted() && transport.isRunning()) {
       final Assessment assessment = new Assessment(sourceMemberId, epoch, memberStatuses);
@@ -172,8 +174,10 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
         sleep(protocolIntervalMillis);
       } catch (InterruptedException interrupted) {
+        logger.info("Failure detector stopping for {}", sourceMemberId);
       }
     }
+    logger.info("Failure detector stopped for {}", sourceMemberId);
   }
 
   private Member selectRandomMember(final Member sourceMember) {
@@ -196,7 +200,6 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public boolean init() {
-    logger.info("Failure detector starting for {}", sourceMemberId);
     start();
     return true;
   }
@@ -208,10 +211,7 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
 
   @Override
   public boolean tini() {
-    // TODO
-    logger.info("Failure detector stopping for {}", sourceMemberId);
     interrupt();
-    logger.info("Failure detector stopped for {}", sourceMemberId);
     return true;
   }
 

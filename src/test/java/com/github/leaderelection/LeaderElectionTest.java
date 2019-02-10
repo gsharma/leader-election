@@ -7,6 +7,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -186,9 +188,16 @@ public class LeaderElectionTest {
       assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
 
       // ensure that fd assessment is consistent
-      for (Map.Entry<Id, MemberStatus> statusEntry : bully.getFailureAssessment()
-          .getMemberStatuses().entrySet()) {
-        assertEquals(MemberStatus.ALIVE, statusEntry.getValue());
+      int counter = 5;
+      while (counter-- > 0) {
+        if (bully.getFailureAssessment() != null) {
+          for (Map.Entry<Id, MemberStatus> statusEntry : bully.getFailureAssessment()
+              .getMemberStatuses().entrySet()) {
+            assertEquals(MemberStatus.ALIVE, statusEntry.getValue());
+          }
+          break;
+        }
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(300L));
       }
       logger.info("Finish election");
 
