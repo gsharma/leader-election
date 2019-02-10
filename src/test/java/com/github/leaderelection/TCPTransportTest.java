@@ -22,6 +22,7 @@ public final class TCPTransportTest {
 
   @Test
   public void testServerLifecycle() throws Exception {
+    Thread.currentThread().setName("testServerLifecycle");
     final String host = "localhost";
     int portOne = 6000;
     final ServiceHandler serviceHandler =

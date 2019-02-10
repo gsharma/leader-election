@@ -16,6 +16,7 @@ public class MemberGroupTest {
 
   @Test
   public void testMemberGroup() throws Exception {
+    Thread.currentThread().setName("testMemberGroup");
     final MemberGroup group = new MemberGroup(new RandomId());
     // final MemberTransport transport = new MemberTransport(group);
 
