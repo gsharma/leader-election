@@ -12,6 +12,8 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+// import org.junit.After;
+// import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -25,6 +27,8 @@ public class LeaderElectionTest {
 
   @Test
   public void testBullyLeaderElection() throws Exception {
+    Thread.currentThread().setName("testBullyLeaderElection");
+    logger.info("----- BEGIN -----");
     /**
      * TODO: make this robust enough to be run successfully in a loop - at the moment, we're crappy
      * and sometimes tend to balk after the first iteration itself
@@ -125,10 +129,13 @@ public class LeaderElectionTest {
         logger.info("Finish overall iter {}", iter);
       }
     }
+    logger.info("----- END -----");
   }
 
   @Test
   public void testMembershipChange() throws Exception {
+    Thread.currentThread().setName("testMembershipChange");
+    logger.info("----- BEGIN -----");
     int port = 2003;
     LeaderElection election = null;
     Member memberOne = null, memberTwo = null, memberThree = null;
@@ -227,6 +234,7 @@ public class LeaderElectionTest {
       }
       Thread.sleep(500L);
     }
+    logger.info("----- END -----");
   }
 
 }
