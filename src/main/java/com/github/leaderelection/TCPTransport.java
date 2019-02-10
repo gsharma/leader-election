@@ -146,7 +146,7 @@ final class TCPTransport {
               final Socket socket = clientChannel.socket();
               socket.setTcpNoDelay(true);
             } catch (Exception problem) {
-              logger.error("Encountered unexpected problem", problem);
+              logger.error("Problem setting up client channel to {}:{}", host, port, problem);
             }
             return clientChannel;
           }
@@ -183,7 +183,7 @@ final class TCPTransport {
       logger.warn("Cannot read from a closed client channel");
       return new byte[0];
     }
-    final ByteBuffer buffer = ByteBuffer.allocate(xsmallMessageSize);
+    final ByteBuffer buffer = ByteBuffer.allocate(smallMessageSize);
     int bytesRead = clientChannel.read(buffer);
     int totalBytesRead = bytesRead;
     while (bytesRead > 0) {
