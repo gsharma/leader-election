@@ -160,7 +160,7 @@ public class LeaderElectionTest {
         assertEquals(expectedEpoch, groupMember.currentEpoch().getEpoch());
       }
 
-      Thread.sleep(3_000L);
+      Thread.sleep(1_000L);
 
       Member bully = group.greatestIdMember();
       election = new BullyLeaderElection(group, bully);
@@ -170,7 +170,7 @@ public class LeaderElectionTest {
       assertNull(election.reportLeader());
       assertEquals(expectedEpoch, election.reportEpoch().getEpoch());
       election.electLeader();
-      final Member leader = election.reportLeader();
+      Member leader = election.reportLeader();
       bully = group.greatestIdMember();
       assertEquals(bully, leader);
       assertEquals(bully, group.getLeader());
@@ -195,6 +195,13 @@ public class LeaderElectionTest {
       // TODO: remove a member from group
       assertTrue(group.removeMember(memberOne));
       assertEquals(MemberStatus.DEAD, memberOne.getStatus());
+      for (final Member member : group.otherMembers(memberOne)) {
+        assertEquals(MemberStatus.ALIVE, member.getStatus());
+      }
+      leader = election.reportLeader();
+      bully = group.greatestIdMember();
+      assertEquals(bully, leader);
+      assertEquals(bully, group.getLeader());
     } finally {
       if (election != null) {
         // Thread.sleep(5000L);
