@@ -37,11 +37,13 @@ public final class MemberGroup {
     if (groupLock.writeLock().tryLock()) {
       try {
         if (members.contains(member)) {
+          logger.info("Removing member {} from group {}", member.getId(), id);
           member.setStatus(MemberStatus.DEAD);
           final List<Member> allOtherMembers = new ArrayList<>(members);
           allOtherMembers.remove(member);
-          MemberFailedMessage failed =
-              new MemberFailedMessage(null, member.currentEpoch(), member.getId());
+          // let the member failed use the failed candidate as the sender, too
+          final MemberFailedMessage failed =
+              new MemberFailedMessage(member.getId(), member.currentEpoch(), member.getId());
           for (final Member toRemoveFrom : allOtherMembers) {
             try {
               Response response = member.getTransport().dispatchTo(toRemoveFrom, failed);
@@ -51,6 +53,10 @@ public final class MemberGroup {
             }
           }
           success = true;
+          logger.info("Successfully removed member {} from group {}", member.getId(), id);
+        } else {
+          logger.warn("Failed to locate removal candidate member {} in group {}", member.getId(),
+              id);
         }
       } finally {
         groupLock.writeLock().unlock();
@@ -58,7 +64,7 @@ public final class MemberGroup {
     } else {
       logger.warn("Failed to acquire writeLock for removeMember({})", member.getId().getId());
     }
-    logger.info("Marked member {} DEAD in group {}, success:{}", member.getId(), id, success);
+    // logger.info("Marked member {} DEAD in group {}, success:{}", member.getId(), id, success);
     return success;
     // return members.remove(member);
   }

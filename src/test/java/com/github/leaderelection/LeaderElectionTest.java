@@ -12,8 +12,6 @@ import java.util.concurrent.locks.LockSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-// import org.junit.After;
-// import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -204,23 +202,24 @@ public class LeaderElectionTest {
           }
           break;
         }
+        logger.info("Retrying to fetch failure assessment");
         LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(300L));
       }
       logger.info("Finish election");
 
-      // TODO: remove a member from group
+      // remove a member from group
       assertTrue(group.removeMember(memberOne));
       assertEquals(MemberStatus.DEAD, memberOne.getStatus());
       for (final Member member : group.otherMembers(memberOne)) {
         assertEquals(MemberStatus.ALIVE, member.getStatus());
       }
+      // should also check that fd's assessment is accurate
       leader = election.reportLeader();
       bully = group.greatestIdMember();
       assertEquals(bully, leader);
       assertEquals(bully, group.getLeader());
     } finally {
       if (election != null) {
-        // Thread.sleep(5000L);
         election.shutdown();
         assertFalse(election.isRunning());
 
