@@ -70,6 +70,7 @@ public final class MemberGroup {
   }
 
   // TODO: should be done via broadcast to all members in the group
+  // TODO: broadcast addMember and test with multi-threaded or multi-process test topology
   public boolean addMember(final Member member) {
     boolean success = false;
     if (groupLock.writeLock().tryLock()) {
@@ -115,7 +116,6 @@ public final class MemberGroup {
     if (member == null) {
       logger.warn("Failed to find member {} in group {}", memberId, id);
     } else {
-      // TODO: should be logged at debug level
       logger.info("Located member {} in group {}", memberId, id);
     }
     // } finally {

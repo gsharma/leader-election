@@ -46,9 +46,6 @@ public final class BullyLeaderElection implements LeaderElection {
     return electedLeader.get();
   }
 
-  // TODO:
-  // sourceMember.getFailureDetector().getAssessment();
-
   @Override
   public synchronized void electLeader() throws LeaderElectionException {
     logger.info("Starting a round of leader election at {}", epoch);

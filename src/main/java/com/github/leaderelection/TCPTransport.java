@@ -37,6 +37,8 @@ final class TCPTransport {
   private static final int mediumMessageSize = 128 * 1024; // 128k
   private static final int largeMessageSize = 1024 * 1024; // 1m
 
+  private static final long serverSpinNanos = TimeUnit.MILLISECONDS.toNanos(1000L);
+
   private final ConcurrentMap<UUID, ServerMetadata> activeServers = new ConcurrentHashMap<>();
   private final ConcurrentMap<String, SocketChannel> activeClients = new ConcurrentHashMap<>();
 
@@ -168,7 +170,7 @@ final class TCPTransport {
     }
 
     // wait a tiny while for the server to respond; hmm but this is just dumb
-    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(500L));
+    LockSupport.parkNanos(serverSpinNanos);
 
     final byte[] serverResponse = read(clientChannel);
 
