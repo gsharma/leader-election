@@ -213,7 +213,29 @@ public class LeaderElectionTest {
       for (final Member member : group.otherMembers(memberOne)) {
         assertEquals(MemberStatus.ALIVE, member.getStatus());
       }
+
       // should also check that fd's assessment is accurate
+      counter = 5;
+      int deadMembers = 0;
+      while (counter-- > 0) {
+        deadMembers = 0;
+        if (bully.getFailureAssessment() != null) {
+          for (final Map.Entry<Id, MemberStatus> statusEntry : bully.getFailureAssessment()
+              .getMemberStatuses().entrySet()) {
+            if (MemberStatus.DEAD == statusEntry.getValue()) {
+              deadMembers++;
+            }
+          }
+          if (deadMembers == 1) {
+            break;
+          }
+        }
+        logger.info("Retrying to fetch failure assessment");
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(500L));
+      }
+      // TODO assertEquals(1, deadMembers);
+
+      // check that leadership has not moved
       leader = election.reportLeader();
       bully = group.greatestIdMember();
       assertEquals(bully, leader);
