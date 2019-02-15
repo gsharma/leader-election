@@ -247,6 +247,10 @@ final class TCPTransport {
     activeServers.remove(serverId);
   }
 
+  ServerMetadata lookupServer(final UUID serverId) {
+    return activeServers.get(serverId);
+  }
+
   void start() {
     running.compareAndSet(false, true);
   }
