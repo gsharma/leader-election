@@ -69,6 +69,7 @@ public class LeaderElectionTest {
 
         Member bully = group.greatestIdMember();
         election = new BullyLeaderElection(group, bully);
+        assertEquals(expectedEpoch, election.reportEpoch().getEpoch());
 
         // TODO: bully.getFailureAssessment();
 
