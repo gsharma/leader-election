@@ -38,7 +38,7 @@ public final class BullyLeaderElection implements LeaderElection {
 
   @Override
   public Epoch reportEpoch() {
-    return epoch;
+    return epoch.deepCopy();
   }
 
   @Override

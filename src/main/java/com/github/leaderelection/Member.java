@@ -107,7 +107,7 @@ public final class Member implements Comparable<Member> {
   }
 
   public Epoch currentEpoch() {
-    return epoch;
+    return epoch.deepCopy();
   }
 
   public UUID getServerTransportId() {

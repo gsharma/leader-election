@@ -47,6 +47,10 @@ public final class Epoch implements Serializable, Comparable<Epoch> {
     return epoch;
   }
 
+  public Epoch deepCopy() {
+    return new Epoch(epoch);
+  }
+
   @Override
   public int compareTo(final Epoch other) {
     return Long.compare(this.epoch, other.epoch);

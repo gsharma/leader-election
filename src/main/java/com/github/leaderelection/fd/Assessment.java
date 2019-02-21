@@ -32,7 +32,7 @@ public final class Assessment {
   }
 
   public Epoch getEpoch() {
-    return epoch;
+    return epoch.deepCopy();
   }
 
   public Map<Id, MemberStatus> getMemberStatuses() {
