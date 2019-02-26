@@ -53,6 +53,11 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
   }
 
   @Override
+  public long getPollIntervalMillis() {
+    return heartbeatIntervalMillis;
+  }
+
+  @Override
   public void run() {
     while (!isInterrupted()) {
       try {

@@ -17,4 +17,6 @@ public interface FailureDetector {
 
   MemberGroup members();
 
+  long getPollIntervalMillis();
+
 }

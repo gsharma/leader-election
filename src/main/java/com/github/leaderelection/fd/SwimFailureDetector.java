@@ -55,6 +55,11 @@ public final class SwimFailureDetector extends Thread implements FailureDetector
   }
 
   @Override
+  public long getPollIntervalMillis() {
+    return protocolIntervalMillis;
+  }
+
+  @Override
   public void run() {
     logger.info("Failure detector starting for {}:{} {}", sourceMember.getHost(),
         sourceMember.getPort(), sourceMemberId);
