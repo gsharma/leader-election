@@ -28,6 +28,7 @@ public class MemberGroupTest {
     memberOne.init();
     assertNotNull(memberOne.getServerTransportId());
     assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
+    assertEquals(0L, memberOne.currentEpoch().getEpoch());
 
     final int portTwo = 4004;
     final Member memberTwo = new Member(new RandomId(), host, portTwo, group);
@@ -35,6 +36,7 @@ public class MemberGroupTest {
     memberTwo.init();
     assertNotNull(memberTwo.getServerTransportId());
     assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
+    assertEquals(0L, memberTwo.currentEpoch().getEpoch());
 
     final int portThree = 4003;
     final Member memberThree = new Member(new RandomId(), host, portThree, group);
@@ -42,6 +44,7 @@ public class MemberGroupTest {
     memberThree.init();
     assertNotNull(memberThree.getServerTransportId());
     assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
+    assertEquals(0L, memberThree.currentEpoch().getEpoch());
 
     Thread.sleep(3_000L);
 
