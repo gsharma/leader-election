@@ -15,8 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>4.12</junit.version>
     <log4j.version>2.11.1</log4j.version>
-    <jackson.version>2.9.9</jackson.version>
-    <jackson-databind.version>2.9.9.2</jackson-databind.version>
+    <jackson.version>2.9.10</jackson.version>
     <javac.target>1.8</javac.target>
     <os-maven-plugin.version>1.6.1</os-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
@@ -68,7 +67,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson-databind.version}</version>
+      <version>${jackson.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
