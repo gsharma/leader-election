@@ -94,15 +94,15 @@ public final class Member implements Comparable<Member> {
     // return success;
   }
 
-  public Response serviceRequest(final Request request) {
-    Response response = null;
-    return response;
-  }
+  /*
+   * public Response serviceRequest(final Request request) { Response response = null; return
+   * response; }
+   */
 
   public void incrementEpoch() {
-    long previous = epoch.getEpoch();
+    final long previous = epoch.getEpoch();
     epoch = epoch.increment();
-    long current = epoch.getEpoch();
+    final long current = epoch.getEpoch();
     logger.info("Member {} epoch incr:{}->{}", id, previous, current);
   }
 

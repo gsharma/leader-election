@@ -23,7 +23,8 @@ import com.github.leaderelection.messages.SwimFDPingProbe;
 import com.github.leaderelection.messages.SwimFDPingRequestProbe;
 
 /**
- * A SWIM-based failure detector implementation.
+ * A SWIM (Scalable Weakly-consistent Infection-style Process Group Membership) based failure
+ * detector implementation.
  * 
  * @author gaurav
  */
