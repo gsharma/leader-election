@@ -344,7 +344,7 @@ final class TCPTransport {
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
-            socket.setTcpNoDelay(true);
+            // socket.setTcpNoDelay(true);
 
             final byte[] requestPayload = read(clientChannel);
 
