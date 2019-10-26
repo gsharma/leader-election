@@ -209,6 +209,7 @@ final class TCPTransport {
   }
 
   private static int write(final SocketChannel clientChannel, byte[] payload) throws Exception {
+    logger.info("Writing");
     if (clientChannel == null || !clientChannel.isConnected()) {
       logger.warn("Cannot send server response on a closed client channel, sending -1 to client");
       return -1;
@@ -329,7 +330,7 @@ final class TCPTransport {
 
           // accept
           if (key.isValid() && key.isAcceptable()) {
-            // logger.info("Key is acceptable");
+            logger.info("Key is acceptable");
             final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
@@ -340,7 +341,7 @@ final class TCPTransport {
 
           // read
           else if (key.isValid() && key.isReadable()) {
-            // logger.info("Key is readable");
+            logger.info("Key is readable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
@@ -348,6 +349,7 @@ final class TCPTransport {
 
             final byte[] requestPayload = read(clientChannel);
 
+            logger.info("Read {} bytes from socket", requestPayload.length);
             if (requestPayload.length > 0) {
               byte[] responsePayload = null;
               if (serviceHandler != null) {
@@ -356,6 +358,8 @@ final class TCPTransport {
 
               write(clientChannel, responsePayload);
               buffer.clear();
+            } else {
+              // logger.info("Nothing to write");
             }
           }
 

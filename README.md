@@ -6,6 +6,8 @@
 # Leader Election
 
 ## Bully Algorithm
+Bully Algorithm is a type of monarchical leader election. 
+
 ### Assumptions
 1. The system is synchronous.
 2. Processes may fail at any time, including during execution of the algorithm.
