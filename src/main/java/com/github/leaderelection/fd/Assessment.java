@@ -1,5 +1,6 @@
 package com.github.leaderelection.fd;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public final class Assessment {
   }
 
   public Map<Id, MemberStatus> getMemberStatuses() {
-    return memberStatuses;
+    return Collections.unmodifiableMap(memberStatuses);
   }
 
   @Override
