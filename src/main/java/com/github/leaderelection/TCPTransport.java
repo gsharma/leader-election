@@ -209,7 +209,7 @@ final class TCPTransport {
   }
 
   private static int write(final SocketChannel clientChannel, byte[] payload) throws Exception {
-    logger.info("Writing");
+    logger.debug("Writing");
     if (clientChannel == null || !clientChannel.isConnected()) {
       logger.warn("Cannot send server response on a closed client channel, sending -1 to client");
       return -1;
@@ -225,8 +225,8 @@ final class TCPTransport {
       bytesWritten = clientChannel.write(buffer);
       totalBytesWritten += bytesWritten;
     }
-    // logger.info("Server sending to client {} response:{}, payload:{} bytes, written:{} bytes",
-    // clientChannel.getRemoteAddress(), new String(payload), payload.length, totalBytesWritten);
+    logger.info("Server sending to client {} payload:{} bytes, written:{} bytes",
+        clientChannel.getRemoteAddress(), payload.length, totalBytesWritten);
     return totalBytesWritten;
   }
 
@@ -330,18 +330,18 @@ final class TCPTransport {
 
           // accept
           if (key.isValid() && key.isAcceptable()) {
-            logger.info("Key is acceptable");
             final SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
             socket.setTcpNoDelay(true);
             clientChannel.register(selector, SelectionKey.OP_READ);
             // clientChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+            logger.info("Accepted socket from client {}", clientChannel.getRemoteAddress());
           }
 
           // read
           else if (key.isValid() && key.isReadable()) {
-            logger.info("Key is readable");
+            logger.debug("Key is readable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
@@ -365,7 +365,7 @@ final class TCPTransport {
 
           // write - no-op path - remove this
           else if (key.isValid() && key.isWritable()) {
-            logger.info("Key is writable");
+            logger.debug("Key is writable");
             final SocketChannel clientChannel = (SocketChannel) key.channel();
             clientChannel.configureBlocking(false);
             final Socket socket = clientChannel.socket();
