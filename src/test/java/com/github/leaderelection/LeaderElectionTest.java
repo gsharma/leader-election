@@ -124,6 +124,7 @@ public class LeaderElectionTest {
           assertFalse(memberTwo.getTransport().isRunning());
           assertFalse(memberThree.getTransport().isRunning());
         }
+        // TODO: remove fugly sleeps like this one
         Thread.sleep(500L);
         logger.info("Finish overall iter {}", iter);
       }
