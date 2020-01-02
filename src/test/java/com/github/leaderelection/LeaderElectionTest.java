@@ -172,7 +172,10 @@ public class LeaderElectionTest {
         assertEquals(expectedEpoch, groupMember.currentEpoch().getEpoch());
       }
 
-      Thread.sleep(3_000L);
+      final long sleepMillis = 4_000L;
+      logger.info("Sleeping for {} millis", sleepMillis);
+      Thread.sleep(sleepMillis);
+      logger.info("Woke up after {} millis", sleepMillis);
 
       Member bully = group.greatestIdMember();
       election = new BullyLeaderElection(group, bully);
