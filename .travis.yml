@@ -12,7 +12,7 @@ script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
 jdk:
-  - oraclejdk8
+  - openjdk13
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) -t c7a76397-78dc-4d4a-a787-bc8bf44a68a4
