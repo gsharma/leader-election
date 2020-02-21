@@ -102,9 +102,12 @@ public class LeaderElectionTest {
             assertEquals(expectedEpoch, groupMember.currentEpoch().getEpoch());
           }
 
-          assertEquals(MemberStatus.ALIVE, memberOne.getStatus());
-          assertEquals(MemberStatus.ALIVE, memberTwo.getStatus());
-          assertEquals(MemberStatus.ALIVE, memberThree.getStatus());
+          assertEquals(memberOne.getId() + " isn't alive", MemberStatus.ALIVE,
+              memberOne.getStatus());
+          assertEquals(memberTwo.getId() + " isn't alive", MemberStatus.ALIVE,
+              memberTwo.getStatus());
+          assertEquals(memberThree.getId() + " isn't alive", MemberStatus.ALIVE,
+              memberThree.getStatus());
 
           // ensure that fd assessment is consistent
           for (Map.Entry<Id, MemberStatus> statusEntry : bully.getFailureAssessment()
