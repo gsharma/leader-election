@@ -14,7 +14,7 @@
     <github.repo.name>leader-election</github.repo.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>4.13</junit.version>
-    <log4j.version>2.13.0</log4j.version>
+    <log4j.version>2.13.3</log4j.version>
     <jackson.version>2.10.2</jackson.version>
     <javac.target>13</javac.target>
     <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
