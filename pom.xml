@@ -13,10 +13,10 @@
     <github.user.name>gsharma</github.user.name>
     <github.repo.name>leader-election</github.repo.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.version>4.13</junit.version>
-    <log4j.version>2.13.0</log4j.version>
+    <junit.version>4.13.1</junit.version>
+    <log4j.version>2.14.0</log4j.version>
     <jackson.version>2.10.2</jackson.version>
-    <javac.target>13</javac.target>
+    <javac.target>11</javac.target>
     <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-enforcer-plugin.version>3.0.0-M3</maven-enforcer-plugin.version>
