@@ -79,7 +79,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
           // TODO: compute the windowed heartbeat aggregation by member
         }
         sleep(heartbeatIntervalMillis);
-      } catch (InterruptedException interrupted) {
+      } catch (final InterruptedException interrupted) {
       }
     }
   }
@@ -107,7 +107,7 @@ public final class HeartbeatFailureDetector extends Thread implements FailureDet
     try {
       interrupt();
       transport.shutdown();
-    } catch (Exception problem) {
+    } catch (final Exception problem) {
       // TODO
     }
     return true;
